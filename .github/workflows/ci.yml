@@ -1,0 +1,16 @@
+name: CI
+on:
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: coursier/setup-action@v1.3.3
+        with:
+          jvm: temurin:17
+          apps: sbt
+      - run: sbt scalafmtCheckAll compile coverage +test coverageReport coverageAggregate versionPolicyCheck documentation/makeSite
+      - uses: codecov/codecov-action@v2.1.0
