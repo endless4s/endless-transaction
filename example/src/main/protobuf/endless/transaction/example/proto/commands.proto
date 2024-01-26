@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package endless.transaction.example.proto;
+
+import "scalapb/scalapb.proto";
+import "endless/transaction/example/proto/model.proto";
+
+message AccountCommand {
+  oneof command {
+    OpenCommand open = 1;
+    BalanceCommand balance = 2;
+    DepositCommand deposit = 3;
+    WithdrawCommand withdraw = 4;
+    PrepareOutgoingTransferCommand prepare_outgoing_transfer = 5;
+    PrepareIncomingTransferCommand prepare_incoming_transfer = 6;
+    CommitTransferCommand commit_transfer = 7;
+    AbortTransferCommand abort_transfer = 8;
+  }
+}
+
+message OpenCommand {}
+
+message BalanceCommand {}
+
+message DepositCommand {
+  int32 amount = 1;
+}
+
+message WithdrawCommand {
+  int32 amount = 1;
+}
+
+message PrepareOutgoingTransferCommand {
+  TransferID transfer_id = 1  [(scalapb.field).required = true];
+  Transfer transfer = 2       [(scalapb.field).required = true];
+}
+
+message PrepareIncomingTransferCommand {
+  TransferID transfer_id = 1  [(scalapb.field).required = true];
+  Transfer transfer = 2       [(scalapb.field).required = true];
+}
+
+message CommitTransferCommand {
+  TransferID transfer_id = 1  [(scalapb.field).required = true];
+}
+
+message AbortTransferCommand {
+  TransferID transfer_id = 1  [(scalapb.field).required = true];
+}

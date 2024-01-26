@@ -1,0 +1,10 @@
+@startuml
+title Transaction entity state diagram
+[*] --> Preparing : transaction created
+Preparing --> Committing : all branches have voted commit
+Preparing --> Aborting : any branch has voted abort
+Preparing --> Aborting: timeout
+Committing --> Committing: abort requested (ignored)
+Committing --> Committed : all branches confirm commit
+Aborting --> Aborted : all branches confirm abort
+@enduml

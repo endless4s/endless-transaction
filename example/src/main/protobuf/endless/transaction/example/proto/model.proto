@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package endless.transaction.example.proto;
+
+import "scalapb/scalapb.proto";
+
+message Transfer {
+  AccountID origin = 1        [(scalapb.field).required = true];
+  AccountID destination = 2   [(scalapb.field).required = true];
+  int32 amount = 3;
+}
+
+message AccountID {
+  string id = 1;
+}
+
+message TransferID {
+  string id = 1;
+}
+
+message TransferFailure {
+  oneof reason {
+    InsufficientFunds insufficient_funds = 1;
+    NotFound not_found = 2;
+    Timeout timeout = 3;
+    OtherPendingTransfer other_pending_transfer = 4;
+  }
+}
+
+message InsufficientFunds {
+  uint32 missing = 1;
+}
+
+message PendingOutgoingTransfer {}
+
+message PendingIncomingTransfer {}
+
+message OtherPendingTransfer {}
+
+message NotFound {
+  AccountID id = 1    [(scalapb.field).required = true];
+}
+
+message Timeout {}

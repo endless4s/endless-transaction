@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package endless.transaction.example.proto;
+
+import "endless/transaction/example/proto/model.proto";
+import "scalapb/scalapb.proto";
+
+message UnitReply {}
+
+message UnknownReply {}
+
+message AlreadyExistsReply {}
+
+message OpenReply {
+  oneof reply {
+    UnitReply unit = 1;
+    AlreadyExistsReply already_exists = 2;
+  }
+}
+
+message BalanceReply {
+  oneof reply {
+    int32 amount = 1;
+    UnknownReply unknown = 2;
+  }
+}
+
+message PrepareOutgoingTransferReply {
+  oneof reply {
+    UnitReply unit = 1;
+    UnknownReply unknown = 2;
+    InsufficientFunds insufficient_funds = 3;
+    PendingOutgoingTransfer pending_outgoing_transfer = 4;
+  }
+}
+
+message PrepareIncomingTransferReply {
+  oneof reply {
+    UnitReply unit = 1;
+    UnknownReply unknown = 2;
+    PendingIncomingTransfer pending_incoming_transfer = 3;
+  }
+}
+
+message CommitTransferReply {
+  oneof reply {
+    UnitReply unit = 1;
+    UnknownReply unknown = 2;
+    TransferUnknown transfer_unknown = 3;
+  }
+}
+
+message AbortTransferReply {
+  oneof reply {
+    UnitReply unit = 1;
+    UnknownReply unknown = 2;
+    TransferUnknown transfer_unknown = 3;
+  }
+}
+
+message DepositReply {
+  oneof reply {
+    int32 amount = 1;
+    UnknownReply unknown = 2;
+  }
+}
+
+message WithdrawReply {
+  oneof reply {
+    int32 amount = 1;
+    UnknownReply unknown = 2;
+    InsufficientFunds insufficient_funds = 3;
+    PendingOutgoingTransfer pending_outgoing_transfer = 4;
+  }
+}
+
+message TransferUnknown {
+  TransferID transfer_id = 1         [(scalapb.field).required = true];
+}

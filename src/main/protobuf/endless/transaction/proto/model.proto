@@ -1,0 +1,91 @@
+syntax = "proto3";
+
+package endless.transaction.proto;
+
+import "scalapb/scalapb.proto";
+
+message TransactionID {
+  bytes value = 1;
+}
+
+message BranchID {
+  bytes value = 1;
+}
+
+message Branches {
+  repeated BranchID branches = 1;
+}
+
+message Vote {
+  oneof vote {
+    Commit commit = 1;
+    Abort abort = 2;
+  }
+}
+
+message Commit {}
+
+message Abort {
+  bytes reason = 1;
+}
+
+message AbortError {
+  oneof error {
+    Unknown unknown = 1;
+    TooLateToAbort too_late_to_abort = 2;
+    TransactionFailed transaction_failed = 3;
+  }
+}
+
+message Status {
+  oneof status {
+    Preparing preparing = 1;
+    Committing committing = 2;
+    Committed committed = 3;
+    Aborting aborting = 4;
+    Aborted aborted = 5;
+    Failed failed = 6;
+  }
+}
+
+message Preparing {}
+
+message Committing {}
+
+message Committed {}
+
+message Aborting {
+  AbortReason reason = 1   [(scalapb.field).required = true];
+}
+
+message Aborted {
+  AbortReason reason = 1  [(scalapb.field).required = true];
+}
+
+message AbortReason {
+  oneof reason {
+    TimeoutAbortReason timeout = 1;
+    BranchesAbortReason branches_aborted = 2;
+    ClientAbortReason client_aborted = 3;
+  }
+}
+
+message TimeoutAbortReason {}
+
+message BranchesAbortReason {
+  repeated bytes reasons = 1;
+}
+
+message ClientAbortReason {
+  bytes reason = 1;
+}
+
+message Failed {
+  repeated string errors = 1;
+}
+
+message Unknown {}
+
+message TooLateToAbort {}
+
+message TransactionFailed {}
