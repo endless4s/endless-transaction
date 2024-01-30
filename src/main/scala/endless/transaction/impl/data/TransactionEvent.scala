@@ -24,5 +24,5 @@ private[transaction] object TransactionEvent {
   final case class BranchFailed[BID](branch: BID, error: String)
       extends TransactionEvent[Nothing, BID, Nothing, Nothing]
 
-  final object Timeout extends TransactionEvent[Nothing, Nothing, Nothing, Nothing]
+  object Timeout extends TransactionEvent[Nothing, Nothing, Nothing, Nothing]
 }

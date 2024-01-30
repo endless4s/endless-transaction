@@ -25,7 +25,7 @@ object Transaction {
     final case class Client[R](reason: Option[R]) extends AbortReason[R]
   }
 
-  final case object Unknown extends AbortError
+  case object Unknown extends AbortError
 
   sealed trait AbortError
   case object TooLateToAbort extends AbortError

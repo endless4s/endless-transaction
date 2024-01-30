@@ -5,7 +5,7 @@ import endless.transaction.example.proto.events as proto
 import endless.transaction.example.proto.model
 import endless.transaction.example.data.AccountEvent.*
 import endless.transaction.example.data.Transfer.TransferID
-
+import cats.syntax.show.*
 import java.util.UUID
 
 class AccountEventAdapter {
@@ -15,11 +15,11 @@ class AccountEventAdapter {
       case Deposited(amount) => proto.Deposited(amount.value)
       case Withdrawn(amount) => proto.Withdrawn(amount.value)
       case OutgoingTransferPrepared(id, amount) =>
-        proto.OutgoingTransferPrepared(model.TransferID(id.value.toString), amount.value)
+        proto.OutgoingTransferPrepared(model.TransferID(id.value.show), amount.value)
       case IncomingTransferPrepared(id, amount) =>
-        proto.IncomingTransferPrepared(model.TransferID(id.value.toString), amount.value)
-      case TransferCommitted(id) => proto.TransferCommitted(model.TransferID(id.value.toString))
-      case TransferAborted(id)   => proto.TransferAborted(model.TransferID(id.value.toString))
+        proto.IncomingTransferPrepared(model.TransferID(id.value.show), amount.value)
+      case TransferCommitted(id) => proto.TransferCommitted(model.TransferID(id.value.show))
+      case TransferAborted(id)   => proto.TransferAborted(model.TransferID(id.value.show))
     }
 
   def fromJournal(event: proto.AccountEvent): AccountEvent = event match {

@@ -14,7 +14,7 @@ import endless.transaction.{Coordinator, Transaction}
 import org.typelevel.log4cats.Logger
 
 private[transaction] final class ShardedCoordinator[F[_]: Logger, TID, BID, Q, R](
-    sharding: Sharding[F, TID, TransactionAlg[_[_], TID, BID, Q, R]]
+    sharding: Sharding[F, TID, ({ type T[G[_]] = TransactionAlg[G, TID, BID, Q, R] })#T]
 )(implicit entityIDCodec: EntityIDCodec[TID], monadError: MonadError[F, Throwable])
     extends Coordinator[F, TID, BID, Q, R] {
   private implicit val entityIDShow: Show[TID] = Show.show(entityIDCodec.encode)
@@ -23,9 +23,9 @@ private[transaction] final class ShardedCoordinator[F[_]: Logger, TID, BID, Q, R
     Resource.make(sharding.entityFor(id).pure[F])(release =
       transaction =>
         (transaction.status >>= {
-          case Right(_: Transaction.Status.Final[_]) =>
+          case Right(_: Transaction.Status.Final[R]) =>
             Logger[F].debug(show"Transaction $id already completed")
-          case Right(_: Transaction.Status.Pending[_]) =>
+          case Right(_: Transaction.Status.Pending[R]) =>
             Logger[F].debug(show"Aborting transaction $id") >> transaction.abort() >>= {
               case Right(_) => Logger[F].debug(show"Transaction $id aborted")
               case Left(_)  => Logger[F].warn(show"Failed to abort transaction $id")

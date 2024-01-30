@@ -33,10 +33,10 @@ object Account {
 
   sealed trait WithdrawFailure
   final case class InsufficientFunds(missing: PosAmount) extends WithdrawFailure
-  final object PendingOutgoingTransfer extends WithdrawFailure
+  object PendingOutgoingTransfer extends WithdrawFailure
 
   sealed trait IncomingTransferFailure
-  final object PendingIncomingTransfer extends IncomingTransferFailure
+  object PendingIncomingTransfer extends IncomingTransferFailure
 
   sealed trait TransferFailure {
     def message: String

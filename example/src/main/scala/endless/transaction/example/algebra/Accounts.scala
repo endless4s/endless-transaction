@@ -16,7 +16,7 @@ object Accounts {
   object TransferFailure {
     final case class InsufficientFunds(missing: PosAmount) extends TransferFailure
     final case class AccountNotFound(accountID: AccountID) extends TransferFailure
-    final object OtherPendingTransfer extends TransferFailure
+    object OtherPendingTransfer extends TransferFailure
     object Timeout extends TransferFailure
 
     implicit val binaryCodec: endless.transaction.BinaryCodec[TransferFailure] =

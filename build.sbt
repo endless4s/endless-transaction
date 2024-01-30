@@ -2,7 +2,7 @@ import Dependencies.*
 import sbtversionpolicy.Compatibility.None
 
 val scala213 = "2.13.12"
-val scala3 = "3.3.1"
+val scala3 = "3.3.2-RC1"
 
 val commonSettings = Seq(
   wartremoverExcluded += sourceManaged.value,
@@ -14,8 +14,6 @@ val commonSettings = Seq(
     Wart.DefaultArguments,
     Wart.Recursion
   ),
-  scalaVersion := scala213,
-  crossScalaVersions := Seq(scala213, scala3),
   libraryDependencies ++= (CrossVersion.partialVersion(scalaVersion.value) match {
     case Some((2, _)) =>
       Seq(compilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full))
@@ -60,6 +58,7 @@ inThisBuild(
 
 lazy val lib = (project in file("."))
   .settings(commonSettings*)
+  .settings(scalaVersion := scala213, crossScalaVersions := Seq(scala213, scala3))
   .settings(name := "endless-transaction")
   .settings(
     Compile / PB.targets := Seq(
@@ -79,17 +78,20 @@ lazy val lib = (project in file("."))
 lazy val pekkoRuntime = (project in file("pekko"))
   .dependsOn(lib)
   .settings(commonSettings*)
+  .settings(scalaVersion := scala213, crossScalaVersions := Seq(scala213, scala3))
   .settings(libraryDependencies ++= Seq(`endless-runtime-pekko`) ++ pekkoProvided)
   .settings(name := "endless-transaction-pekko")
 
 lazy val akkaRuntime = (project in file("akka"))
   .dependsOn(lib)
   .settings(commonSettings*)
+  .settings(scalaVersion := scala213, crossScalaVersions := Seq(scala213, scala3))
   .settings(libraryDependencies ++= Seq(`endless-runtime-akka`))
   .settings(name := "endless-transaction-akka")
 
 lazy val example = (project in file("example"))
   .settings(commonSettings*)
+  .settings(scalaVersion := scala213)
   .dependsOn(lib % "test->test;compile->compile", pekkoRuntime)
   .settings(name := "endless-transaction-example")
   .settings(
@@ -98,7 +100,8 @@ lazy val example = (project in file("example"))
   .settings(
     libraryDependencies ++= Seq(
       `endless-core`,
-      `logback-classic`
+      `logback-classic`,
+      `scalapb-runtime`
     ) ++ pekko ++ pekkoTest ++ http4s ++ `log4cats-core` ++ `log4cats-slf4j` ++
       (munit ++ `munit-cats-effect-3` ++ `scalacheck-effect-munit` ++ `log4cats-testing` ++ `cats-scalacheck` ++ `cats-effect-testkit`)
         .map(_ % Test)
@@ -107,5 +110,6 @@ lazy val example = (project in file("example"))
 
 lazy val root = project
   .aggregate(lib, pekkoRuntime, akkaRuntime, example)
+  .settings(commonSettings*)
   .settings(crossScalaVersions := Nil)
   .settings(publish / skip := true)

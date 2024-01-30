@@ -25,9 +25,10 @@ class ShardedCoordinatorSuite
         def status: IO[Transaction.Unknown.type \/ Transaction.Status[R]] =
           IO.pure(Right(finalTransactionStatus))
       }
-      val sharding = new Sharding[IO, TID, TransactionAlg[_[_], TID, BID, Q, R]] {
-        def entityFor(id: TID): TransactionAlg[IO, TID, BID, Q, R] = testTransaction
-      }
+      val sharding =
+        new Sharding[IO, TID, ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T] {
+          def entityFor(id: TID): TransactionAlg[IO, TID, BID, Q, R] = testTransaction
+        }
       val coordinator = new ShardedCoordinator(sharding)
       coordinator.get(tid).use_ >> logger.assertLogsDebug
     }
@@ -41,9 +42,10 @@ class ShardedCoordinatorSuite
         override def abort(reason: Option[R]): IO[Transaction.AbortError \/ Unit] =
           IO.pure(Right(()))
       }
-      val sharding = new Sharding[IO, TID, TransactionAlg[_[_], TID, BID, Q, R]] {
-        def entityFor(id: TID): TransactionAlg[IO, TID, BID, Q, R] = testTransaction
-      }
+      val sharding =
+        new Sharding[IO, TID, ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T] {
+          def entityFor(id: TID): TransactionAlg[IO, TID, BID, Q, R] = testTransaction
+        }
       val coordinator = new ShardedCoordinator(sharding)
       coordinator.get(tid).use_ >> logger.assertLogsDebug
     }
@@ -57,9 +59,10 @@ class ShardedCoordinatorSuite
         override def abort(reason: Option[R]): IO[Transaction.AbortError \/ Unit] =
           IO.pure(Left(Transaction.TooLateToAbort))
       }
-      val sharding = new Sharding[IO, TID, TransactionAlg[_[_], TID, BID, Q, R]] {
-        def entityFor(id: TID): TransactionAlg[IO, TID, BID, Q, R] = testTransaction
-      }
+      val sharding =
+        new Sharding[IO, TID, ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T] {
+          def entityFor(id: TID): TransactionAlg[IO, TID, BID, Q, R] = testTransaction
+        }
       val coordinator = new ShardedCoordinator(sharding)
       coordinator.get(tid).use_ >> logger.assertLogsDebug >> logger.assertLogsWarn
     }
@@ -71,9 +74,10 @@ class ShardedCoordinatorSuite
         def status: IO[Transaction.Unknown.type \/ Transaction.Status[R]] =
           IO.pure(Left(Transaction.Unknown))
       }
-      val sharding = new Sharding[IO, TID, TransactionAlg[_[_], TID, BID, Q, R]] {
-        def entityFor(id: TID): TransactionAlg[IO, TID, BID, Q, R] = testTransaction
-      }
+      val sharding =
+        new Sharding[IO, TID, ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T] {
+          def entityFor(id: TID): TransactionAlg[IO, TID, BID, Q, R] = testTransaction
+        }
       val coordinator = new ShardedCoordinator(sharding)
       coordinator.get(tid).use_ >> logger.assertLogsDebug
     }
@@ -85,9 +89,10 @@ class ShardedCoordinatorSuite
         def status: IO[Transaction.Unknown.type \/ Transaction.Status[R]] =
           IO.raiseError(new Exception("Failed to retrieve status"))
       }
-      val sharding = new Sharding[IO, TID, TransactionAlg[_[_], TID, BID, Q, R]] {
-        def entityFor(id: TID): TransactionAlg[IO, TID, BID, Q, R] = testTransaction
-      }
+      val sharding =
+        new Sharding[IO, TID, ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T] {
+          def entityFor(id: TID): TransactionAlg[IO, TID, BID, Q, R] = testTransaction
+        }
       val coordinator = new ShardedCoordinator(sharding)
       coordinator.get(tid).use_ >> logger.assertLogsDebug >> logger.assertLogsWarn
     }
@@ -105,9 +110,10 @@ class ShardedCoordinatorSuite
         def status: IO[Transaction.Unknown.type \/ Transaction.Status[R]] =
           IO(Right(Transaction.Status.Preparing))
       }
-      val sharding = new Sharding[IO, TID, TransactionAlg[_[_], TID, BID, Q, R]] {
-        def entityFor(id: TID): TransactionAlg[IO, TID, BID, Q, R] = testTransaction
-      }
+      val sharding =
+        new Sharding[IO, TID, ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T] {
+          def entityFor(id: TID): TransactionAlg[IO, TID, BID, Q, R] = testTransaction
+        }
       val coordinator = new ShardedCoordinator(sharding)
       coordinator
         .create(tid, query, branches.head, branches.head, branches.tail*)
@@ -128,9 +134,10 @@ class ShardedCoordinatorSuite
         def status: IO[Transaction.Unknown.type \/ Transaction.Status[R]] =
           IO(Right(Transaction.Status.Preparing))
       }
-      val sharding = new Sharding[IO, TID, TransactionAlg[_[_], TID, BID, Q, R]] {
-        def entityFor(id: TID): TransactionAlg[IO, TID, BID, Q, R] = testTransaction
-      }
+      val sharding =
+        new Sharding[IO, TID, ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T] {
+          def entityFor(id: TID): TransactionAlg[IO, TID, BID, Q, R] = testTransaction
+        }
       val coordinator = new ShardedCoordinator(sharding)
       interceptIO[Coordinator.TransactionAlreadyExists.type](
         coordinator

@@ -15,10 +15,10 @@ object Transfer {
     def random: TransferID = TransferID(UUID.randomUUID())
 
     implicit val eq: Eq[TransferID] = Eq.fromUniversalEquals
-    implicit val show: cats.Show[TransferID] = cats.Show.show(_.value.toString)
+    implicit val show: cats.Show[TransferID] = cats.Show.show(_.value.show)
 
     implicit val stringCodec: StringCodec[TransferID] = new StringCodec[TransferID] {
-      def encode(id: TransferID): String = id.value.toString
+      def encode(id: TransferID): String = id.value.show
       def decode(id: String): TransferID = TransferID(UUID.fromString(id))
     }
 

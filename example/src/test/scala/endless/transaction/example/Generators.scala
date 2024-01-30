@@ -56,8 +56,8 @@ trait Generators {
 
   val accountEventGen: Gen[AccountEvent] = Gen.oneOf(
     Gen.const(AccountEvent.Opened),
-    posAmountGen.map(AccountEvent.Deposited),
-    posAmountGen.map(AccountEvent.Withdrawn),
+    posAmountGen.map(AccountEvent.Deposited.apply),
+    posAmountGen.map(AccountEvent.Withdrawn.apply),
     transferIDGen.flatMap { id =>
       Gen.oneOf(
         posAmountGen.map(AccountEvent.OutgoingTransferPrepared(id, _)),
@@ -78,7 +78,7 @@ trait Generators {
   )
   implicit val arbUnknown: Arbitrary[Account.Unknown.type] = Arbitrary(Gen.const(Account.Unknown))
   implicit val arbInsufficientFunds: Arbitrary[Account.InsufficientFunds] = Arbitrary(
-    posAmountGen.map(Account.InsufficientFunds)
+    posAmountGen.map(Account.InsufficientFunds.apply)
   )
   implicit val arbWithdrawFailure: Arbitrary[Account.WithdrawFailure] = Arbitrary(
     Gen.oneOf(
@@ -91,14 +91,14 @@ trait Generators {
     Gen.oneOf(Gen.const(Account.PendingIncomingTransfer), arbUnknown.arbitrary)
   )
   implicit val arbTransferFailure: Arbitrary[Account.TransferFailure] = Arbitrary(
-    Gen.oneOf(arbUnknown.arbitrary, transferIDGen.map(Account.TransferUnknown))
+    Gen.oneOf(arbUnknown.arbitrary, transferIDGen.map(Account.TransferUnknown.apply))
   )
   implicit val arbTransferFailureAccounts: Arbitrary[Accounts.TransferFailure] = Arbitrary(
     Gen.oneOf(
-      accountIDGen.map(Accounts.TransferFailure.AccountNotFound),
+      accountIDGen.map(Accounts.TransferFailure.AccountNotFound.apply),
       Gen.const(Accounts.TransferFailure.Timeout),
       Gen.const(Accounts.TransferFailure.OtherPendingTransfer),
-      posAmountGen.map(Accounts.TransferFailure.InsufficientFunds)
+      posAmountGen.map(Accounts.TransferFailure.InsufficientFunds.apply)
     )
   )
   implicit val arbTransfer: Arbitrary[Transfer] = Arbitrary(transferGen)

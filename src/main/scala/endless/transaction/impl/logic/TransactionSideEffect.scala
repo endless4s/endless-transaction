@@ -20,11 +20,19 @@ import scala.concurrent.duration.FiniteDuration
 private[transaction] final class TransactionSideEffect[F[_]: Temporal, TID, BID, Q, R](
     timeoutSideEffect: TimeoutSideEffect[F],
     branchForID: BID => Branch[F, TID, BID, Q, R]
-) extends SideEffect[F, TransactionState[TID, BID, Q, R], TransactionAlg[_[_], TID, BID, Q, R]] {
+) extends SideEffect[
+      F,
+      TransactionState[TID, BID, Q, R],
+      ({ type T[G[_]] = TransactionAlg[G, TID, BID, Q, R] })#T
+    ] {
 
   def apply(
       trigger: Trigger,
-      effector: Effector[F, TransactionState[TID, BID, Q, R], TransactionAlg[_[_], TID, BID, Q, R]]
+      effector: Effector[
+        F,
+        TransactionState[TID, BID, Q, R],
+        ({ type T[G[_]] = TransactionAlg[G, TID, BID, Q, R] })#T
+      ]
   ): F[Unit] = {
     import effector.*
 
@@ -76,8 +84,8 @@ private[transaction] final class TransactionSideEffect[F[_]: Temporal, TID, BID,
 
     lazy val passivationEffect = ifKnown(state =>
       state.status match {
-        case _: Status.Pending[_] => disablePassivation
-        case _: Status.Final[_]   => enablePassivation()
+        case _: Status.Pending[R] => disablePassivation
+        case _: Status.Final[R]   => enablePassivation()
       }
     )
 
@@ -96,7 +104,11 @@ private[transaction] object TransactionSideEffect {
       timeout: Option[FiniteDuration],
       branchForID: BID => Branch[F, TID, BID, Q, R],
       alg: TransactionAlg[F, TID, BID, Q, R]
-  ): F[SideEffect[F, TransactionState[TID, BID, Q, R], TransactionAlg[_[_], TID, BID, Q, R]]] =
+  ): F[SideEffect[
+    F,
+    TransactionState[TID, BID, Q, R],
+    ({ type T[G[_]] = TransactionAlg[G, TID, BID, Q, R] })#T
+  ]] =
     TimeoutSideEffect[F](timeout, alg.timeout()).map(timeoutEffect =>
       new TransactionSideEffect[F, TID, BID, Q, R](timeoutEffect, branchForID)
     )

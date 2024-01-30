@@ -37,7 +37,7 @@ import endless.transaction.example.logic.AccountProtocol.{
   UnexpectedCommandException,
   UnexpectedReplyException
 }
-
+import cats.syntax.show.*
 import java.util.UUID
 
 class AccountProtocol extends ProtobufCommandProtocol[AccountID, Account] {
@@ -170,7 +170,7 @@ class AccountProtocol extends ProtobufCommandProtocol[AccountID, Account] {
               replies.CommitTransferReply(
                 replies.CommitTransferReply.Reply.TransferUnknown(
                   replies.TransferUnknown(
-                    model.TransferID(id.value.toString)
+                    model.TransferID(id.value.show)
                   )
                 )
               )
@@ -193,7 +193,7 @@ class AccountProtocol extends ProtobufCommandProtocol[AccountID, Account] {
               replies.AbortTransferReply(
                 replies.AbortTransferReply.Reply.TransferUnknown(
                   replies.TransferUnknown(
-                    model.TransferID(id.value.toString)
+                    model.TransferID(id.value.show)
                   )
                 )
               )
@@ -249,7 +249,7 @@ class AccountProtocol extends ProtobufCommandProtocol[AccountID, Account] {
           AccountCommand(
             AccountCommand.Command.PrepareOutgoingTransfer(
               PrepareOutgoingTransferCommand(
-                model.TransferID(transferID.value.toString),
+                model.TransferID(transferID.value.show),
                 model.Transfer(
                   model.AccountID(transfer.origin.value),
                   model.AccountID(transfer.destination.value),
@@ -303,7 +303,7 @@ class AccountProtocol extends ProtobufCommandProtocol[AccountID, Account] {
           AccountCommand(
             AccountCommand.Command.PrepareIncomingTransfer(
               PrepareIncomingTransferCommand(
-                model.TransferID(transferID.value.toString),
+                model.TransferID(transferID.value.show),
                 model.Transfer(
                   model.AccountID(transfer.origin.value),
                   model.AccountID(transfer.destination.value),
@@ -342,7 +342,7 @@ class AccountProtocol extends ProtobufCommandProtocol[AccountID, Account] {
           id,
           AccountCommand(
             AccountCommand.Command.CommitTransfer(
-              CommitTransferCommand(model.TransferID(transferID.value.toString))
+              CommitTransferCommand(model.TransferID(transferID.value.show))
             )
           ),
           {
@@ -376,7 +376,7 @@ class AccountProtocol extends ProtobufCommandProtocol[AccountID, Account] {
           id,
           AccountCommand(
             AccountCommand.Command.AbortTransfer(
-              AbortTransferCommand(model.TransferID(transferID.value.toString))
+              AbortTransferCommand(model.TransferID(transferID.value.show))
             )
           ),
           {

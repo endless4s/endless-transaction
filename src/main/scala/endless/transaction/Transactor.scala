@@ -51,7 +51,7 @@ trait Transactor[F[_]] {
       ], TransactionEvent[TID, BID, Q, R]],
       async: Async[F],
       logger: Logger[F]
-  ): Resource[F, deployer.Deployment[F, Coordinator[_[_], TID, BID, Q, R]]] = {
+  ): Resource[F, deployer.Deployment[F, ({ type C[G[_]] = Coordinator[G, TID, BID, Q, R] })#C]] = {
     type S = TransactionState[TID, BID, Q, R]
     type E = TransactionEvent[TID, BID, Q, R]
     type Alg[K[_]] = TransactionAlg[K, TID, BID, Q, R]

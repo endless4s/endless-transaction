@@ -10,6 +10,7 @@ import endless.transaction.impl.algebra.{TransactionAlg, TransactionCreator}
 import org.scalacheck.Prop.forAll
 
 class TransactionProtocolSuite extends munit.ScalaCheckSuite with Generators {
+
   val protocol = new TransactionProtocol[TID, BID, Q, R]()
   test("create") {
     forAll {
@@ -20,7 +21,11 @@ class TransactionProtocolSuite extends munit.ScalaCheckSuite with Generators {
           reply: TransactionCreator.AlreadyExists.type \/ Unit
       ) =>
         implicit val sender: CommandSender[Id, TID] =
-          CommandSender.local[Id, TID, TransactionAlg[_[_], TID, BID, Q, R]](
+          CommandSender.local[
+            Id,
+            TID,
+            ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T
+          ]( // have to use this verbose type syntax to cross-compile
             protocol,
             new TestTransactionAlg {
               override def create(
@@ -38,7 +43,7 @@ class TransactionProtocolSuite extends munit.ScalaCheckSuite with Generators {
   test("query") {
     forAll { (id: TID, reply: Transaction.Unknown.type \/ Q) =>
       implicit val sender: CommandSender[Id, TID] =
-        CommandSender.local[Id, TID, TransactionAlg[_[_], TID, BID, Q, R]](
+        CommandSender.local[Id, TID, ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T](
           protocol,
           new TestTransactionAlg {
             override def query: Id[Transaction.Unknown.type \/ Q] = reply
@@ -52,7 +57,7 @@ class TransactionProtocolSuite extends munit.ScalaCheckSuite with Generators {
   test("branches") {
     forAll { (id: TID, reply: Transaction.Unknown.type \/ Set[BID]) =>
       implicit val sender: CommandSender[Id, TID] =
-        CommandSender.local[Id, TID, TransactionAlg[_[_], TID, BID, Q, R]](
+        CommandSender.local[Id, TID, ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T](
           protocol,
           new TestTransactionAlg {
             override def branches: Id[Transaction.Unknown.type \/ Set[BID]] = reply
@@ -66,7 +71,7 @@ class TransactionProtocolSuite extends munit.ScalaCheckSuite with Generators {
   test("status") {
     forAll { (id: TID, reply: Transaction.Unknown.type \/ Transaction.Status[R]) =>
       implicit val sender: CommandSender[Id, TID] =
-        CommandSender.local[Id, TID, TransactionAlg[_[_], TID, BID, Q, R]](
+        CommandSender.local[Id, TID, ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T](
           protocol,
           new TestTransactionAlg {
             override def status: Id[Transaction.Unknown.type \/ Transaction.Status[R]] = reply
@@ -80,7 +85,7 @@ class TransactionProtocolSuite extends munit.ScalaCheckSuite with Generators {
   test("abort") {
     forAll { (id: TID, reason: Option[R], reply: Transaction.AbortError \/ Unit) =>
       implicit val sender: CommandSender[Id, TID] =
-        CommandSender.local[Id, TID, TransactionAlg[_[_], TID, BID, Q, R]](
+        CommandSender.local[Id, TID, ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T](
           protocol,
           new TestTransactionAlg {
             override def abort(reason: Option[R]): Id[Transaction.AbortError \/ Unit] = reply
@@ -94,7 +99,7 @@ class TransactionProtocolSuite extends munit.ScalaCheckSuite with Generators {
   test("branchVoted") {
     forAll { (id: TID, branch: BID, vote: Branch.Vote[R], reply: Unit) =>
       implicit val sender: CommandSender[Id, TID] =
-        CommandSender.local[Id, TID, TransactionAlg[_[_], TID, BID, Q, R]](
+        CommandSender.local[Id, TID, ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T](
           protocol,
           new TestTransactionAlg {
             override def branchVoted(branch: BID, vote: Branch.Vote[R]): Id[Unit] = reply
@@ -108,7 +113,7 @@ class TransactionProtocolSuite extends munit.ScalaCheckSuite with Generators {
   test("branchCommitted") {
     forAll { (id: TID, branch: BID, reply: Unit) =>
       implicit val sender: CommandSender[Id, TID] =
-        CommandSender.local[Id, TID, TransactionAlg[_[_], TID, BID, Q, R]](
+        CommandSender.local[Id, TID, ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T](
           protocol,
           new TestTransactionAlg {
             override def branchCommitted(branch: BID): Id[Unit] = reply
@@ -122,7 +127,7 @@ class TransactionProtocolSuite extends munit.ScalaCheckSuite with Generators {
   test("branchAborted") {
     forAll { (id: TID, branch: BID, reply: Unit) =>
       implicit val sender: CommandSender[Id, TID] =
-        CommandSender.local[Id, TID, TransactionAlg[_[_], TID, BID, Q, R]](
+        CommandSender.local[Id, TID, ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T](
           protocol,
           new TestTransactionAlg {
             override def branchAborted(branch: BID): Id[Unit] = reply
@@ -136,7 +141,7 @@ class TransactionProtocolSuite extends munit.ScalaCheckSuite with Generators {
   test("branchFailed") {
     forAll { (id: TID, branch: BID, error: TID, reply: Unit) =>
       implicit val sender: CommandSender[Id, TID] =
-        CommandSender.local[Id, TID, TransactionAlg[_[_], TID, BID, Q, R]](
+        CommandSender.local[Id, TID, ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T](
           protocol,
           new TestTransactionAlg {
             override def branchFailed(branch: BID, error: TID): Id[Unit] = reply
@@ -150,7 +155,7 @@ class TransactionProtocolSuite extends munit.ScalaCheckSuite with Generators {
   test("timeout") {
     forAll { (id: TID, reply: Unit) =>
       implicit val sender: CommandSender[Id, TID] =
-        CommandSender.local[Id, TID, TransactionAlg[_[_], TID, BID, Q, R]](
+        CommandSender.local[Id, TID, ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T](
           protocol,
           new TestTransactionAlg {
             override def timeout(): Id[Unit] = reply

@@ -30,9 +30,10 @@ private[transaction] class TransactionProtocol[TID, BID, Q, R](implicit
     bidCodec: BinaryCodec[BID],
     qCodec: BinaryCodec[Q],
     rCodec: BinaryCodec[R]
-) extends ProtobufCommandProtocol[TID, TransactionAlg[_[_], TID, BID, Q, R]] {
+) extends ProtobufCommandProtocol[TID, ({ type T[G[_]] = TransactionAlg[G, TID, BID, Q, R] })#T] {
 
-  def server[F[_]]: Decoder[IncomingCommand[F, TransactionAlg[_[_], TID, BID, Q, R]]] =
+  def server[F[_]]
+      : Decoder[IncomingCommand[F, ({ type T[G[_]] = TransactionAlg[G, TID, BID, Q, R] })#T]] =
     ProtobufDecoder[TransactionCommand].map(_.command match {
       case Command.Empty => throw new UnexpectedCommandException
       case Command.Create(CreateCommand(id, query, branches, _)) =>

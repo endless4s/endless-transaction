@@ -42,7 +42,12 @@ class TransactionSideEffectSuite
           )
         )
         effector <- Effector
-          .apply[IO, TransactionState[TID, BID, Q, R], TransactionAlg[_[_], TID, BID, Q, R]](
+          .apply[IO, TransactionState[
+            TID,
+            BID,
+            Q,
+            R
+          ], ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T](
             new SelfEntity {
               override def branchVoted(branch: BID, vote: Vote[R]): IO[Unit] = IO.unit
               override def branchCommitted(branch: BID): IO[Unit] = IO.unit
@@ -71,7 +76,12 @@ class TransactionSideEffectSuite
           )
         )
         effector <- Effector
-          .apply[IO, TransactionState[TID, BID, Q, R], TransactionAlg[_[_], TID, BID, Q, R]](
+          .apply[IO, TransactionState[
+            TID,
+            BID,
+            Q,
+            R
+          ], ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T](
             new SelfEntity {
               override def branchVoted(branch: BID, vote: Vote[R]): IO[Unit] = IO.unit
               override def branchCommitted(branch: BID): IO[Unit] = IO.unit
@@ -102,7 +112,12 @@ class TransactionSideEffectSuite
           )
         )
         effector <- Effector
-          .apply[IO, TransactionState[TID, BID, Q, R], TransactionAlg[_[_], TID, BID, Q, R]](
+          .apply[IO, TransactionState[
+            TID,
+            BID,
+            Q,
+            R
+          ], ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T](
             new SelfEntity {
               override def branchVoted(branch: BID, vote: Vote[R]): IO[Unit] = IO.unit
               override def branchCommitted(branch: BID): IO[Unit] = IO.unit
@@ -133,7 +148,12 @@ class TransactionSideEffectSuite
           )
         )
         effector <- Effector
-          .apply[IO, TransactionState[TID, BID, Q, R], TransactionAlg[_[_], TID, BID, Q, R]](
+          .apply[IO, TransactionState[
+            TID,
+            BID,
+            Q,
+            R
+          ], ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T](
             new SelfEntity {
               override def branchVoted(branch: BID, vote: Vote[R]): IO[Unit] =
                 stateRef.update(_.branchVoted(branch, vote).fold(fail(_), identity))
@@ -164,7 +184,12 @@ class TransactionSideEffectSuite
         )
         preparingWithHeadBranchVote <- stateRef.get
         effector <- Effector
-          .apply[IO, TransactionState[TID, BID, Q, R], TransactionAlg[_[_], TID, BID, Q, R]](
+          .apply[IO, TransactionState[
+            TID,
+            BID,
+            Q,
+            R
+          ], ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T](
             new SelfEntity {
               override def branchVoted(branch: BID, vote: Vote[R]): IO[Unit] =
                 stateRef.update(_.branchVoted(branch, vote).fold(fail(_), identity))
@@ -192,7 +217,12 @@ class TransactionSideEffectSuite
           )
         )
         effector <- Effector
-          .apply[IO, TransactionState[TID, BID, Q, R], TransactionAlg[_[_], TID, BID, Q, R]](
+          .apply[IO, TransactionState[
+            TID,
+            BID,
+            Q,
+            R
+          ], ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T](
             new SelfEntity {
               override def branchFailed(branch: BID, error: TID): IO[Unit] =
                 stateRef.update(_.branchFailed(branch, error).fold(fail(_), identity))
@@ -223,7 +253,12 @@ class TransactionSideEffectSuite
           )
         )
         effector <- Effector
-          .apply[IO, TransactionState[TID, BID, Q, R], TransactionAlg[_[_], TID, BID, Q, R]](
+          .apply[IO, TransactionState[
+            TID,
+            BID,
+            Q,
+            R
+          ], ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T](
             new SelfEntity {
               override def branchCommitted(branch: BID): IO[Unit] =
                 stateRef.update(_.branchCommitted(branch).fold(fail(_), identity))
@@ -254,7 +289,12 @@ class TransactionSideEffectSuite
         )
         committingWithHeadBranchCommitted <- stateRef.get
         effector <- Effector
-          .apply[IO, TransactionState[TID, BID, Q, R], TransactionAlg[_[_], TID, BID, Q, R]](
+          .apply[IO, TransactionState[
+            TID,
+            BID,
+            Q,
+            R
+          ], ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T](
             new SelfEntity {
               override def branchCommitted(branch: BID): IO[Unit] =
                 stateRef.update(_.branchCommitted(branch).fold(fail(_), identity))
@@ -282,7 +322,12 @@ class TransactionSideEffectSuite
           )
         )
         effector <- Effector
-          .apply[IO, TransactionState[TID, BID, Q, R], TransactionAlg[_[_], TID, BID, Q, R]](
+          .apply[IO, TransactionState[
+            TID,
+            BID,
+            Q,
+            R
+          ], ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T](
             new SelfEntity {
               override def branchFailed(branch: BID, error: TID): IO[Unit] =
                 stateRef.update(_.branchFailed(branch, error).fold(fail(_), identity))
@@ -313,7 +358,12 @@ class TransactionSideEffectSuite
           )
         )
         effector <- Effector
-          .apply[IO, TransactionState[TID, BID, Q, R], TransactionAlg[_[_], TID, BID, Q, R]](
+          .apply[IO, TransactionState[
+            TID,
+            BID,
+            Q,
+            R
+          ], ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T](
             new SelfEntity {
               override def branchAborted(branch: BID): IO[Unit] =
                 stateRef.update(_.branchAborted(branch).fold(fail(_), identity))
@@ -344,7 +394,12 @@ class TransactionSideEffectSuite
         )
         abortingWithHeadBranchAborted <- stateRef.get
         effector <- Effector
-          .apply[IO, TransactionState[TID, BID, Q, R], TransactionAlg[_[_], TID, BID, Q, R]](
+          .apply[IO, TransactionState[
+            TID,
+            BID,
+            Q,
+            R
+          ], ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T](
             new SelfEntity {
               override def branchAborted(branch: BID): IO[Unit] =
                 stateRef.update(_.branchAborted(branch).fold(fail(_), identity))
@@ -372,7 +427,12 @@ class TransactionSideEffectSuite
           )
         )
         effector <- Effector
-          .apply[IO, TransactionState[TID, BID, Q, R], TransactionAlg[_[_], TID, BID, Q, R]](
+          .apply[IO, TransactionState[
+            TID,
+            BID,
+            Q,
+            R
+          ], ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T](
             new SelfEntity {
               override def branchFailed(branch: BID, error: TID): IO[Unit] =
                 stateRef.update(_.branchFailed(branch, error).fold(fail(_), identity))
