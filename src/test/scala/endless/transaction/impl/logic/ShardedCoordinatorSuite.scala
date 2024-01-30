@@ -19,7 +19,7 @@ class ShardedCoordinatorSuite
   private implicit val logger: TestingLogger[IO] = TestingLogger.impl[IO]()
   private val shouldNotBeCalled = IO.raiseError(new Exception("Should not be called"))
 
-  test("transaction resource release just logs when in final status") {
+  test("transaction resource release does nothing in final status") {
     forAllF { (tid: TID, finalTransactionStatus: Transaction.Status.Final[R]) =>
       val testTransaction = new TestTransaction {
         def status: IO[Transaction.Unknown.type \/ Transaction.Status[R]] =
@@ -30,7 +30,7 @@ class ShardedCoordinatorSuite
           def entityFor(id: TID): TransactionAlg[IO, TID, BID, Q, R] = testTransaction
         }
       val coordinator = new ShardedCoordinator(sharding)
-      coordinator.get(tid).use_ >> logger.assertLogsDebug
+      assertIO_(coordinator.get(tid).use_)
     }
   }
 

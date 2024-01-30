@@ -2,7 +2,7 @@ import Dependencies.*
 import sbtversionpolicy.Compatibility.None
 
 val scala213 = "2.13.12"
-val scala3 = "3.3.2-RC1"
+val scala3 = "3.3.1"
 
 val commonSettings = Seq(
   wartremoverExcluded += sourceManaged.value,
@@ -110,6 +110,7 @@ lazy val example = (project in file("example"))
 
 lazy val root = project
   .aggregate(lib, pekkoRuntime, akkaRuntime, example)
+  .dependsOn(example)
   .settings(commonSettings*)
   .settings(crossScalaVersions := Nil)
   .settings(publish / skip := true)

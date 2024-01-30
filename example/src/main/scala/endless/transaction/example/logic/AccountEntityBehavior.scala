@@ -30,13 +30,15 @@ final case class AccountEntityBehavior[F[_]: Logger](entity: Entity[F, AccountSt
       transfer: Transfer
   ): F[WithdrawFailure \/ Unit] =
     ifKnownFE[WithdrawFailure, Unit](state =>
-      if (state.pendingTransfer.isDefined) {
+      if (state.pendingTransfer.exists(_.id === id))
+        Logger[F].debug(show"Outgoing transfer already prepared: $id").map(_.asRight)
+      else if (state.pendingTransfer.isDefined) {
         Logger[F].warn(
           show"Account already has pending transfer, cannot prepare $transfer"
         ) >> (PendingOutgoingTransfer: WithdrawFailure).asLeft.pure
       } else if (state.balance >= transfer.amount)
         Logger[F].debug(
-          show"Account has enough balance, preparing transfer $id: $transfer"
+          show"Account has enough balance, preparing transfer $id to account ${transfer.destination}"
         ) >> write(
           OutgoingTransferPrepared(id, transfer.amount)
         ).map(_.asRight)
@@ -51,12 +53,16 @@ final case class AccountEntityBehavior[F[_]: Logger](entity: Entity[F, AccountSt
       transfer: Transfer
   ): F[IncomingTransferFailure \/ Unit] =
     ifKnownFE[IncomingTransferFailure, Unit](state =>
-      if (state.pendingTransfer.isDefined)
+      if (state.pendingTransfer.exists(_.id === id))
+        Logger[F].debug(show"Incoming transfer already prepared: $id").map(_.asRight)
+      else if (state.pendingTransfer.isDefined)
         Logger[F].warn(
           show"Account already has pending transfer, cannot prepare $transfer"
         ) >> (PendingIncomingTransfer: IncomingTransferFailure).asLeft.pure
       else
-        Logger[F].debug(show"Prepare incoming transfer $id: $transfer") >> write(
+        Logger[F].debug(
+          show"Prepare incoming transfer $id from account ${transfer.origin}"
+        ) >> write(
           IncomingTransferPrepared(id, transfer.amount)
         ).map(_.asRight)
     )(Unknown)

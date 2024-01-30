@@ -18,7 +18,7 @@ trait Generators {
 
   val posAmountGen: Gen[PosAmount] = Gen.posNum[Int].map(PosAmount(_))
 
-  val accountIDGen: Gen[AccountID] = Gen.alphaNumStr.map(AccountID(_))
+  val accountIDGen: Gen[AccountID] = Gen.alphaStr.suchThat(_.nonEmpty).map(AccountID(_))
 
   val transferGen: Gen[Transfer] = for {
     from <- accountIDGen

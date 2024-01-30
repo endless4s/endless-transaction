@@ -23,8 +23,7 @@ private[transaction] final class ShardedCoordinator[F[_]: Logger, TID, BID, Q, R
     Resource.make(sharding.entityFor(id).pure[F])(release =
       transaction =>
         (transaction.status >>= {
-          case Right(_: Transaction.Status.Final[R]) =>
-            Logger[F].debug(show"Transaction $id already completed")
+          case Right(_: Transaction.Status.Final[R]) => ().pure
           case Right(_: Transaction.Status.Pending[R]) =>
             Logger[F].debug(show"Aborting transaction $id") >> transaction.abort() >>= {
               case Right(_) => Logger[F].debug(show"Transaction $id aborted")

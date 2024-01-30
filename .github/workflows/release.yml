@@ -18,6 +18,8 @@ jobs:
         run: sbt scalafmtCheckAll coverage +test coverageReport coverageAggregate
       - name: Codecov
         uses: codecov/codecov-action@v2.1.0
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   publish:
     runs-on: ubuntu-latest

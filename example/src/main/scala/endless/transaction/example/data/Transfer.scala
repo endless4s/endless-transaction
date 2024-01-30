@@ -57,5 +57,7 @@ object Transfer {
   }
 
   implicit val show: Show[Transfer] =
-    Show.show(t => show"Transfer from ${t.origin} to ${t.destination} of ${t.amount}")
+    Show.show(t =>
+      show"Transfer from account `${t.origin}` to account `${t.destination}` of ${t.amount}"
+    )
 }

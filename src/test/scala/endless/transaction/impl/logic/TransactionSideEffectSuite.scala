@@ -133,7 +133,9 @@ class TransactionSideEffectSuite
     }
   }
 
-  test("prepares all branches (after persistence or recovery)") {
+  test(
+    "prepares all branches when there are no votes registered yet (after persistence or recovery)"
+  ) {
     forAllF(preparingGen, persistenceOrRecoveryTriggerGen) { (preparing, trigger: Trigger) =>
       for {
         stateRef <- IO.ref[TransactionState[TID, BID, Q, R]](preparing)
@@ -166,12 +168,45 @@ class TransactionSideEffectSuite
     }
   }
 
-  test("prepares branches with missing votes (after persistence or recovery)") {
-    forAllF(preparingGen, persistenceOrRecoveryTriggerGen) { (preparing, trigger: Trigger) =>
+  test("does not repeat branch preparation right after persisting the first vote") {
+    forAllF(preparingGen) { preparing =>
       for {
         stateRef <- IO.ref[TransactionState[TID, BID, Q, R]](
           preparing.branchVoted(preparing.branches.head, Vote.Commit).fold(fail(_), identity)
         )
+        preparingWithHeadBranchVote <- stateRef.get
+        sideEffect <- IO(
+          new TransactionSideEffect[IO, TID, BID, Q, R](
+            neverTimeout,
+            (_: BID) =>
+              new TestBranch {
+                override def prepare(transactionID: TID, query: Q): IO[Vote[R]] = shouldNotBeCalled
+              }
+          )
+        )
+        effector <- Effector
+          .apply[IO, TransactionState[
+            TID,
+            BID,
+            Q,
+            R
+          ], ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T](
+            new SelfEntity {},
+            Some(preparingWithHeadBranchVote)
+          )
+        _ <- sideEffect.apply(Trigger.AfterPersistence, effector)
+        _ <- assertIOBoolean(stateRef.get.map(_.status == Status.Preparing))
+      } yield ()
+    }
+  }
+
+  test("prepares branches (only with missing votes) after recovery") {
+    forAllF(preparingGen) { preparing =>
+      for {
+        stateRef <- IO.ref[TransactionState[TID, BID, Q, R]](
+          preparing.branchVoted(preparing.branches.head, Vote.Commit).fold(fail(_), identity)
+        )
+        preparingWithHeadBranchVote <- stateRef.get
         sideEffect <- IO(
           new TransactionSideEffect[IO, TID, BID, Q, R](
             neverTimeout,
@@ -182,7 +217,6 @@ class TransactionSideEffectSuite
               }
           )
         )
-        preparingWithHeadBranchVote <- stateRef.get
         effector <- Effector
           .apply[IO, TransactionState[
             TID,
@@ -196,7 +230,7 @@ class TransactionSideEffectSuite
             },
             Some(preparingWithHeadBranchVote)
           )
-        _ <- sideEffect.apply(trigger, effector)
+        _ <- sideEffect.apply(Trigger.AfterRecovery, effector)
         _ <- assertIOBoolean(stateRef.get.map(_.status == Status.Committing))
       } yield ()
     }
@@ -271,8 +305,8 @@ class TransactionSideEffectSuite
     }
   }
 
-  test("commit branches with missing commits (after persistence or recovery)") {
-    forAllF(committingGen, persistenceOrRecoveryTriggerGen) { (committing, trigger: Trigger) =>
+  test("commit branches (that still miss commits) after recovery") {
+    forAllF(committingGen) { committing =>
       for {
         stateRef <- IO.ref[TransactionState[TID, BID, Q, R]](
           committing.branchCommitted(committing.branches.head).fold(fail(_), identity)
@@ -301,8 +335,40 @@ class TransactionSideEffectSuite
             },
             Some(committingWithHeadBranchCommitted)
           )
-        _ <- sideEffect.apply(trigger, effector)
+        _ <- sideEffect.apply(Trigger.AfterRecovery, effector)
         _ <- assertIOBoolean(stateRef.get.map(_.status == Status.Committed))
+      } yield ()
+    }
+  }
+
+  test("does not repeat branch commit right after persisting the first commit confirmation") {
+    forAllF(committingGen) { committing =>
+      for {
+        stateRef <- IO.ref[TransactionState[TID, BID, Q, R]](
+          committing.branchCommitted(committing.branches.head).fold(fail(_), identity)
+        )
+        committingWithHeadBranchCommitted <- stateRef.get
+        sideEffect <- IO(
+          new TransactionSideEffect[IO, TID, BID, Q, R](
+            neverTimeout,
+            (_: BID) =>
+              new TestBranch {
+                override def commit(transactionID: TID): IO[Unit] = shouldNotBeCalled
+              }
+          )
+        )
+        effector <- Effector
+          .apply[IO, TransactionState[
+            TID,
+            BID,
+            Q,
+            R
+          ], ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T](
+            new SelfEntity {},
+            Some(committingWithHeadBranchCommitted)
+          )
+        _ <- sideEffect.apply(Trigger.AfterPersistence, effector)
+        _ <- assertIOBoolean(stateRef.get.map(_.status == Status.Committing))
       } yield ()
     }
   }
@@ -376,8 +442,8 @@ class TransactionSideEffectSuite
     }
   }
 
-  test("abort branches with missing aborts (after persistence or recovery)") {
-    forAllF(abortingGen, persistenceOrRecoveryTriggerGen) { (aborting, trigger: Trigger) =>
+  test("abort branches (only with missing aborts) after recovery") {
+    forAllF(abortingGen) { aborting =>
       for {
         stateRef <- IO.ref[TransactionState[TID, BID, Q, R]](
           aborting.branchAborted(aborting.branches.head).fold(fail(_), identity)
@@ -406,8 +472,40 @@ class TransactionSideEffectSuite
             },
             Some(abortingWithHeadBranchAborted)
           )
-        _ <- sideEffect.apply(trigger, effector)
+        _ <- sideEffect.apply(Trigger.AfterRecovery, effector)
         _ <- assertIOBoolean(stateRef.get.map(_.status == Status.Aborted(aborting.reason)))
+      } yield ()
+    }
+  }
+
+  test("do not repeat branch abort right after persisting the first abort confirmation") {
+    forAllF(abortingGen) { aborting =>
+      for {
+        stateRef <- IO.ref[TransactionState[TID, BID, Q, R]](
+          aborting.branchAborted(aborting.branches.head).fold(fail(_), identity)
+        )
+        abortingWithHeadBranchAborted <- stateRef.get
+        sideEffect <- IO(
+          new TransactionSideEffect[IO, TID, BID, Q, R](
+            neverTimeout,
+            (_: BID) =>
+              new TestBranch {
+                override def abort(transactionID: TID): IO[Unit] = shouldNotBeCalled
+              }
+          )
+        )
+        effector <- Effector
+          .apply[IO, TransactionState[
+            TID,
+            BID,
+            Q,
+            R
+          ], ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T](
+            new SelfEntity {},
+            Some(abortingWithHeadBranchAborted)
+          )
+        _ <- sideEffect.apply(Trigger.AfterPersistence, effector)
+        _ <- assertIOBoolean(stateRef.get.map(_.status == Status.Aborting(aborting.reason)))
       } yield ()
     }
   }

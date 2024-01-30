@@ -10,7 +10,6 @@ import endless.transaction.impl.data.{TransactionEvent, TransactionState}
 import endless.transaction.proto
 import endless.transaction.proto.events
 import endless.transaction.{BinaryCodec, Branch, Coordinator, StringCodec, Transactor}
-import org.apache.pekko.cluster.sharding.typed.ClusterShardingSettings
 import org.apache.pekko.persistence.typed.{EventAdapter, EventSeq}
 import org.typelevel.log4cats.Logger
 
@@ -41,8 +40,7 @@ class PekkoTransactor[F[_]: Async: Logger](implicit pekkoCluster: PekkoCluster[F
             new EventAdapter[TransactionEvent[TID, BID, Q, R], proto.events.TransactionEvent] {
               override def toJournal(
                   event: TransactionEvent[TID, BID, Q, R]
-              ): proto.events.TransactionEvent =
-                eventAdapter.toJournal(event)
+              ): proto.events.TransactionEvent = eventAdapter.toJournal(event)
 
               def manifest(event: TransactionEvent[TID, BID, Q, R]): String = event.getClass.getName
 
@@ -52,10 +50,7 @@ class PekkoTransactor[F[_]: Async: Logger](implicit pekkoCluster: PekkoCluster[F
               ): EventSeq[TransactionEvent[TID, BID, Q, R]] =
                 EventSeq.single(eventAdapter.fromJournal(p))
             }
-          ),
-        customizeEntity =
-          // we can't leave transactions dangling, otherwise e.g. we can lock up participating entities or have partial commits
-          _.withSettings(ClusterShardingSettings(pekkoCluster.system).withRememberEntities(true))
+          )
       )
     }
     deployEntityBasedCoordinator(

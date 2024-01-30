@@ -81,8 +81,6 @@ private[transaction] object TransactionState {
       }
     }
 
-    def hasBranchAlreadyVoted(branch: BID): Boolean = votes.get(branch).exists(_.isDefined)
-
     private def abortingByBranches(reasons: NonEmptyList[R]) =
       Aborting(id, branches.map(_ -> false).toMap, query, AbortReason.Branches(reasons))
 
@@ -92,6 +90,10 @@ private[transaction] object TransactionState {
     private def abortVotes = votes.values.collect { case Some(Vote.Abort(reason)) =>
       reason
     }.toList
+
+    def hasBranchAlreadyVoted(branch: BID): Boolean = votes.get(branch).exists(_.isDefined)
+
+    def noVotesYet: Boolean = votes.values.forall(_.isEmpty)
 
     private def haveAllVoted: Boolean = votes.values.forall(_.isDefined)
 
@@ -131,6 +133,8 @@ private[transaction] object TransactionState {
 
     def hasBranchAlreadyCommitted(branch: BID): Boolean =
       commits.get(branch).exists(identity)
+
+    def noCommitsYet: Boolean = commits.values.forall(!_)
 
     private def haveAllCommitted: Boolean = commits.values.forall(identity)
 
@@ -179,6 +183,8 @@ private[transaction] object TransactionState {
       }
 
     def hasBranchAlreadyAborted(branch: BID): Boolean = aborts.get(branch).exists(identity)
+
+    def noAbortsYet: Boolean = aborts.values.forall(!_)
 
     private def haveAllAborted: Boolean = aborts.values.forall(identity)
   }

@@ -19,9 +19,11 @@ class TransferBranch[F[_]: Logger](accountID: AccountID, account: Account[F])(im
 ) extends Branch[F, TransferID, AccountID, Transfer, TransferFailure] {
   import monadError.*
 
-  def prepare(transferID: TransferID, transfer: Transfer): F[Branch.Vote[TransferFailure]] =
-    Logger[F].debug(show"Preparing transfer $transferID: $transfer for account $accountID") >> {
-      if (accountID === transfer.origin)
+  def prepare(transferID: TransferID, transfer: Transfer): F[Branch.Vote[TransferFailure]] = {
+    if (accountID === transfer.origin)
+      Logger[F].debug(
+        show"Preparing outgoing transfer $transferID: $transfer for account $accountID"
+      ) >>
         account.prepareOutgoingTransfer(transferID, transfer).map {
           case Left(Account.Unknown) =>
             Branch.Vote.Abort(TransferFailure.AccountNotFound(accountID))
@@ -31,7 +33,8 @@ class TransferBranch[F[_]: Logger](accountID: AccountID, account: Account[F])(im
             Branch.Vote.Abort(TransferFailure.OtherPendingTransfer)
           case Right(_) => Branch.Vote.Commit
         }
-      else
+    else
+      Logger[F].debug(show"Preparing incoming $transferID: $transfer for account $accountID") >>
         account.prepareIncomingTransfer(transferID, transfer).map {
           case Left(Account.Unknown) =>
             Branch.Vote.Abort(TransferFailure.AccountNotFound(accountID))
@@ -39,7 +42,7 @@ class TransferBranch[F[_]: Logger](accountID: AccountID, account: Account[F])(im
             Branch.Vote.Abort(TransferFailure.OtherPendingTransfer)
           case Right(_) => Branch.Vote.Commit
         }
-    }
+  }
 
   def commit(transferID: TransferID): F[Unit] =
     Logger[F].debug(show"Committing transfer $transferID for account $accountID") >>

@@ -8,6 +8,7 @@ import cats.syntax.functor.*
 import cats.syntax.parallel.*
 import cats.effect.kernel.implicits.parallelForGenSpawn
 import endless.core.entity.SideEffect.Trigger
+import endless.core.entity.SideEffect.Trigger.{AfterPersistence, AfterRead, AfterRecovery}
 import endless.core.entity.{Effector, SideEffect}
 import endless.transaction.Branch
 import endless.transaction.Transaction.Status
@@ -37,7 +38,11 @@ private[transaction] final class TransactionSideEffect[F[_]: Temporal, TID, BID,
     import effector.*
 
     lazy val branchEffect: F[Unit] = ifKnown {
-      case preparing: Preparing[TID, BID, Q, R] =>
+      case preparing: Preparing[TID, BID, Q, R] if (trigger match {
+            case AfterPersistence => preparing.noVotesYet // only send prepares once, or on recovery
+            case AfterRecovery    => true
+            case AfterRead        => false
+          }) =>
         preparing.branches
           .filterNot(preparing.hasBranchAlreadyVoted)
           .map(zipWithBranch)
@@ -50,7 +55,12 @@ private[transaction] final class TransactionSideEffect[F[_]: Temporal, TID, BID,
           }
           .void
 
-      case committing: Committing[TID, BID, Q, R] =>
+      case committing: Committing[TID, BID, Q, R] if (trigger match {
+            case AfterPersistence =>
+              committing.noCommitsYet // only send commits once, or on recovery
+            case AfterRecovery => true
+            case AfterRead     => false
+          }) =>
         committing.branches
           .filterNot(committing.hasBranchAlreadyCommitted)
           .map(zipWithBranch)
@@ -63,7 +73,12 @@ private[transaction] final class TransactionSideEffect[F[_]: Temporal, TID, BID,
           }
           .void
 
-      case aborting: Aborting[TID, BID, Q, R] =>
+      case aborting: Aborting[TID, BID, Q, R] if (trigger match {
+            case AfterPersistence =>
+              aborting.noAbortsYet // only send aborts once, or on recovery
+            case AfterRecovery => true
+            case AfterRead     => false
+          }) =>
         aborting.branches
           .filterNot(aborting.hasBranchAlreadyAborted)
           .map(zipWithBranch)
