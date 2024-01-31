@@ -74,5 +74,54 @@ class AccountsAppSuite extends munit.CatsEffectSuite with ScalaCheckEffectSuite 
     }
   }
 
+  test("depositing to non-existing account fails") {
+    for {
+      status <- client().status(POST(baseUri / "unknown" / "deposit" / 10))
+    } yield assertEquals(status.code, 400)
+  }
+
+  test("withdrawing from non-existing account fails") {
+    for {
+      status <- client().status(POST(baseUri / "unknown" / "withdraw" / 10))
+    } yield assertEquals(status.code, 400)
+  }
+
+  test("balance for non-existing account fails") {
+    for {
+      status <- client().status(GET(baseUri / "unknown" / "balance"))
+    } yield assertEquals(status.code, 400)
+  }
+
+  test("transferring from non-existing origin account fails") {
+    for {
+      _ <- client().status(POST(baseUri / "destination"))
+      status <- client().status(POST(baseUri / "unknown" / "transfer" / "to" / "destination" / 10))
+    } yield assertEquals(status.code, 400)
+  }
+
+  test("transferring to non-existing destination account fails") {
+    for {
+      _ <- client().status(POST(baseUri / "origin"))
+      status <- client().status(POST(baseUri / "origin" / "transfer" / "to" / "unknown" / 10))
+    } yield assertEquals(status.code, 400)
+  }
+
+  test("withdrawing from account with insufficient funds fails") {
+    for {
+      _ <- client().status(POST(baseUri / "account"))
+      _ <- client().status(POST(baseUri / "account" / "deposit" / 1))
+      status <- client().status(POST(baseUri / "account" / "withdraw" / 2))
+    } yield assertEquals(status.code, 400)
+  }
+
+  test("transferring from account with insufficient funds fails") {
+    for {
+      _ <- client().status(POST(baseUri / "origin"))
+      _ <- client().status(POST(baseUri / "destination"))
+      _ <- client().status(POST(baseUri / "origin" / "deposit" / 1))
+      status <- client().status(POST(baseUri / "origin" / "transfer" / "to" / "destination" / 2))
+    } yield assertEquals(status.code, 400)
+  }
+
   override def munitFixtures: Seq[Fixture[?]] = List(pekkoServer, client)
 }

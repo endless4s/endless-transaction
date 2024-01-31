@@ -55,7 +55,14 @@ class TransferBranch[F[_]: Logger](accountID: AccountID, account: Account[F])(im
   def abort(transferID: TransferID): F[Unit] =
     Logger[F].debug(show"Aborting transfer $transferID for account $accountID") >>
       EitherT(account.abortTransfer(transferID)).foldF(
-        error => raiseError[Unit](new RuntimeException(error.message)),
+        {
+          case Account.Unknown =>
+            Logger[F].debug(show"Account $accountID is unknown, ignoring abort")
+          case _: Account.TransferUnknown =>
+            Logger[F].debug(
+              show"Branch voted abort of transfer $transferID (balance was not enough), no need for further action"
+            )
+        },
         pure
       )
 }
