@@ -30,7 +30,7 @@ final case class AccountEntityBehavior[F[_]: Logger](entity: Entity[F, AccountSt
       transfer: Transfer
   ): F[WithdrawFailure \/ Unit] =
     ifKnownFE[WithdrawFailure, Unit](state =>
-      if (state.pendingTransfer.exists(_.id === id))
+      if (state.pendingTransfer.exists(_.id === id) || state.transferHistory.contains(id))
         Logger[F].debug(show"Outgoing transfer already prepared: $id").map(_.asRight)
       else if (state.pendingTransfer.isDefined) {
         Logger[F].warn(
@@ -53,7 +53,7 @@ final case class AccountEntityBehavior[F[_]: Logger](entity: Entity[F, AccountSt
       transfer: Transfer
   ): F[IncomingTransferFailure \/ Unit] =
     ifKnownFE[IncomingTransferFailure, Unit](state =>
-      if (state.pendingTransfer.exists(_.id === id))
+      if (state.pendingTransfer.exists(_.id === id) || state.transferHistory.contains(id))
         Logger[F].debug(show"Incoming transfer already prepared: $id").map(_.asRight)
       else if (state.pendingTransfer.isDefined)
         Logger[F].warn(
@@ -69,7 +69,9 @@ final case class AccountEntityBehavior[F[_]: Logger](entity: Entity[F, AccountSt
 
   def commitTransfer(id: Transfer.TransferID): F[TransferFailure \/ Unit] =
     ifKnownFE[TransferFailure, Unit](state =>
-      if (state.pendingTransfer.exists(_.id === id))
+      if (state.transferHistory.contains(id)) {
+        Logger[F].debug(show"Transfer $id already committed") >> ().asRight.pure
+      } else if (state.pendingTransfer.exists(_.id === id))
         Logger[F].debug(show"Committing transfer $id") >> write(TransferCommitted(id))
           .map(_.asRight)
       else
@@ -80,7 +82,9 @@ final case class AccountEntityBehavior[F[_]: Logger](entity: Entity[F, AccountSt
 
   def abortTransfer(id: Transfer.TransferID): F[TransferFailure \/ Unit] =
     ifKnownFE[TransferFailure, Unit](state =>
-      if (state.pendingTransfer.exists(_.id === id))
+      if (state.transferHistory.contains(id)) {
+        Logger[F].debug(show"Transfer $id already aborted") >> ().asRight.pure
+      } else if (state.pendingTransfer.exists(_.id === id))
         Logger[F].debug(show"Aborting transfer $id") >> write(TransferAborted(id)).map(_.asRight)
       else
         Logger[F].error(show"Unprepared transfer $id") >> (TransferUnknown(

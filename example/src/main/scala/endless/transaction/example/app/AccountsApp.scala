@@ -4,7 +4,6 @@ import cats.effect.IO
 import cats.effect.kernel.Resource
 import cats.syntax.flatMap.*
 import com.comcast.ip4s.Port
-import com.typesafe.config.ConfigFactory
 import endless.core.entity.{EntityNameProvider, Sharding}
 import endless.core.interpret.{BehaviorInterpreter, SideEffectInterpreter}
 import endless.core.protocol.EntityIDCodec
@@ -23,10 +22,6 @@ import endless.transaction.example.logic.{
 import endless.transaction.example.proto.events
 import endless.transaction.pekko.PekkoTransactor
 import org.apache.pekko.actor.typed.ActorSystem
-import org.apache.pekko.persistence.testkit.{
-  PersistenceTestKitDurableStateStorePlugin,
-  PersistenceTestKitPlugin
-}
 import org.apache.pekko.persistence.typed.{EventAdapter, EventSeq}
 import org.apache.pekko.util.Timeout
 import org.http4s.server.Server
@@ -42,7 +37,7 @@ object AccountsApp {
   private implicit val eventApplier: AccountEventApplier = new AccountEventApplier
   private implicit val commandProtocol: AccountProtocol = new AccountProtocol
   private implicit val transferParameters: TransferParameters =
-    TransferParameters(timeout = 10.seconds)
+    TransferParameters(timeout = 30.seconds)
   private implicit val askTimeout: Timeout = Timeout(30.seconds)
   private lazy val pekkoEventAdapter = new EventAdapter[AccountEvent, events.AccountEvent] {
     private val eventAdapter = new AccountEventAdapter
@@ -52,32 +47,18 @@ object AccountsApp {
       EventSeq.single(eventAdapter.fromJournal(e))
   }
 
-  def apply(port: Port): Resource[IO, Server] =
-    IO.executionContext.toResource >>= actorSystem >>= createPekkoApp >>= (deployment =>
-      HttpServer(port, deployment.repository)
+  def apply(httpPort: Port)(implicit system: ActorSystem[Nothing]): Resource[IO, Server] =
+    IO.executionContext.toResource >>= terminateOnRelease(system) >>= createPekkoApp >>= (
+      deployment => HttpServer(httpPort, deployment.repository)
     )
 
-  private def actorSystem(executionContext: ExecutionContext): Resource[IO, ActorSystem[Nothing]] =
-    Resource.make(
-      IO(
-        ActorSystem.wrap(
-          org.apache.pekko.actor.ActorSystem(
-            name = "example-pekko-as",
-            config = Some(
-              PersistenceTestKitPlugin.config
-                .withFallback(PersistenceTestKitDurableStateStorePlugin.config)
-                .withFallback(ConfigFactory.defaultApplication)
-                .resolve()
-            ),
-            defaultExecutionContext = Some(executionContext),
-            classLoader = None
-          )
-        )
-      )
-    )(system =>
+  private def terminateOnRelease(
+      actorSystem: ActorSystem[Nothing]
+  )(executionContext: ExecutionContext) =
+    Resource.make(IO.pure(actorSystem))(_ =>
       IO.fromFuture(IO.blocking {
-        system.terminate()
-        system.whenTerminated
+        actorSystem.terminate()
+        actorSystem.whenTerminated
       }).void
     )
 

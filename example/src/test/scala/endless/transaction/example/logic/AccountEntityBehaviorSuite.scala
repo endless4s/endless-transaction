@@ -110,6 +110,20 @@ class AccountEntityBehaviorSuite
     }
   }
 
+  test("prepareOutgoingTransfer ignores already prepared transfer") {
+    forAllF(accountStateWithoutPendingTransferGen, transferGen, transferIDGen) {
+      (state, transfer, id) =>
+        behavior
+          .prepareOutgoingTransfer(id, transfer)
+          .run(Some(state.copy(transferHistory = state.transferHistory + id)))
+          .map {
+            case Right((_, Right(_))) => ()
+            case Right((_, Left(_)))  => fail("account should exist")
+            case Left(error)          => fail(error)
+          }
+    }
+  }
+
   test("prepareIncomingTransfer returns error with unknown account") {
     forAllF(transferIDGen, transferGen) { (id, transfer) =>
       behavior.prepareIncomingTransfer(id, transfer).run(None).map {
@@ -130,6 +144,20 @@ class AccountEntityBehaviorSuite
           case Right((_, Left(_))) => fail("account should exist")
           case Left(error)         => fail(error)
         }
+    }
+  }
+
+  test("prepareIncomingTransfer ignores already prepared transfer") {
+    forAllF(accountStateWithoutPendingTransferGen, transferGen, transferIDGen) {
+      (state, transfer, id) =>
+        behavior
+          .prepareIncomingTransfer(id, transfer)
+          .run(Some(state.copy(transferHistory = state.transferHistory + id)))
+          .map {
+            case Right((_, Right(_))) => ()
+            case Right((_, Left(_)))  => fail("account should exist")
+            case Left(error)          => fail(error)
+          }
     }
   }
 
@@ -184,6 +212,21 @@ class AccountEntityBehaviorSuite
     }
   }
 
+  test("commitTransfer ignores already committed transfer") {
+    forAllF(accountStateWithPendingTransferGen) { state =>
+      behavior
+        .commitTransfer(state.pendingTransfer.get.id)
+        .run(
+          Some(state.copy(transferHistory = state.transferHistory + state.pendingTransfer.get.id))
+        )
+        .map {
+          case Right((_, Right(_))) => ()
+          case Right((_, Left(_)))  => fail("account should exist")
+          case Left(error)          => fail(error)
+        }
+    }
+  }
+
   test("abortTransfer returns error with unknown account") {
     forAllF(transferIDGen) { id =>
       behavior.abortTransfer(id).run(None).map {
@@ -219,6 +262,21 @@ class AccountEntityBehaviorSuite
             )
           case Right((_, Left(_))) => fail("account should exist")
           case Left(error)         => fail(error)
+        }
+    }
+  }
+
+  test("abortTransfer ignores already aborted transfer") {
+    forAllF(accountStateWithPendingTransferGen) { state =>
+      behavior
+        .abortTransfer(state.pendingTransfer.get.id)
+        .run(
+          Some(state.copy(transferHistory = state.transferHistory + state.pendingTransfer.get.id))
+        )
+        .map {
+          case Right((_, Right(_))) => ()
+          case Right((_, Left(_)))  => fail("account should exist")
+          case Left(error)          => fail(error)
         }
     }
   }

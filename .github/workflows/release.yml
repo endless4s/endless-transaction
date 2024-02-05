@@ -8,6 +8,16 @@ on:
 jobs:
   coverage:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:11
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: example
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
       - uses: actions/checkout@v2.3.4
       - uses: coursier/setup-action@v1.3.3
@@ -15,7 +25,7 @@ jobs:
           jvm: temurin:17
           apps: sbt
       - name: Test and compute coverage
-        run: sbt scalafmtCheckAll coverage +test coverageReport coverageAggregate
+        run: sbt scalafmtCheckAll coverage +test example/multi-jvm:test coverageReport coverageAggregate
       - name: Codecov
         uses: codecov/codecov-action@v2.1.0
         env:

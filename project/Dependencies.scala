@@ -19,7 +19,7 @@ object Dependencies {
     "org.http4s" %% "http4s-circe" % http4sVersion
   )
 
-  lazy val pekkoVersion = "1.0.2"
+  lazy val pekkoVersion = "1.0.0"
   lazy val `pekko-actor-typed` = "org.apache.pekko" %% "pekko-actor-typed"
   lazy val `pekko-persistence-typed` = "org.apache.pekko" %% "pekko-persistence-typed"
   lazy val `pekko-cluster-typed` = "org.apache.pekko" %% "pekko-cluster-typed"
@@ -41,6 +41,15 @@ object Dependencies {
   lazy val pekkoTest =
     Seq(`pekko-actor-testkit-typed`, `pekko-persistence-testkit`).map(_ % pekkoVersion)
 
+  lazy val postgresql = "org.postgresql" % "postgresql" % "42.7.1"
+  lazy val `pekko-persistence-jdbc` =
+    ("org.apache.pekko" %% "pekko-persistence-jdbc" % "1.0.0").excludeAll("org.apache.pekko")
+  lazy val slickVersion = "3.3.3"
+  lazy val slick = Seq(
+    "com.typesafe.slick" %% "slick" % slickVersion,
+    "com.typesafe.slick" %% "slick-hikaricp" % slickVersion
+  )
+
   lazy val `logback-classic` = "ch.qos.logback" % "logback-classic" % "1.4.14"
 
   lazy val log4catsVersion = "2.6.0"
@@ -50,6 +59,8 @@ object Dependencies {
 
   lazy val munit =
     Seq("org.scalameta" %% "munit", "org.scalameta" %% "munit-scalacheck").map(_ % "0.7.29")
+
+  lazy val scalatest = Seq("org.scalatest" %% "scalatest" % "3.2.15")
 
   lazy val `munit-cats-effect-3` = Seq("org.typelevel" %% "munit-cats-effect-3" % "1.0.7")
 

@@ -69,7 +69,7 @@ object Transaction {
   implicit class TransactionOps[F[_]: Temporal, BID, Q, R](
       transaction: Transaction[F, BID, Q, R]
   ) {
-    def pollForFinalStatus(frequency: FiniteDuration = 100.milliseconds): F[Status.Final[R]] =
+    def pollForFinalStatus(frequency: FiniteDuration = 200.milliseconds): F[Status.Final[R]] =
       for {
         status <- transaction.status.map(_.toOption)
         result <- status match {

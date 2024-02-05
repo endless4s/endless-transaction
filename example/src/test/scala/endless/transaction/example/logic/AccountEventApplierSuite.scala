@@ -69,7 +69,13 @@ class AccountEventApplierSuite extends munit.ScalaCheckSuite with Generators {
         case AccountState.PendingTransfer.Outgoing(_, amount) => (state.balance - amount).value
       }
       applier.apply(Some(state), AccountEvent.TransferCommitted(pendingTransfer.id)) == Right(
-        Some(state.copy(balance = NonNegAmount(expectedBalance), pendingTransfer = None))
+        Some(
+          state.copy(
+            balance = NonNegAmount(expectedBalance),
+            pendingTransfer = None,
+            transferHistory = Set(pendingTransfer.id)
+          )
+        )
       )
     }
   }
@@ -79,7 +85,7 @@ class AccountEventApplierSuite extends munit.ScalaCheckSuite with Generators {
       val applier = new AccountEventApplier
       val pendingTransfer = state.pendingTransfer.get
       applier.apply(Some(state), AccountEvent.TransferAborted(pendingTransfer.id)) == Right(
-        Some(state.copy(pendingTransfer = None))
+        Some(state.copy(pendingTransfer = None, transferHistory = Set(pendingTransfer.id)))
       )
     }
   }

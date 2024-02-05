@@ -1,24 +1,51 @@
 package endless.transaction.example.app
 
 import cats.effect.IO
+import cats.syntax.flatMap.*
 import cats.syntax.show.*
 import com.comcast.ip4s.*
+import com.typesafe.config.ConfigFactory
 import endless.transaction.example.Generators
 import endless.transaction.example.data.{AccountID, PosAmount}
 import munit.ScalaCheckEffectSuite
+import org.apache.pekko.actor.typed.ActorSystem
+import org.apache.pekko.persistence.testkit.{
+  PersistenceTestKitDurableStateStorePlugin,
+  PersistenceTestKitPlugin
+}
+import org.http4s.Method.*
 import org.http4s.Uri
+import org.http4s.Uri.Path.SegmentEncoder
 import org.http4s.client.dsl.io.*
 import org.http4s.ember.client.EmberClientBuilder
 import org.scalacheck.effect.PropF.forAllF
-import org.http4s.Method.*
-import org.http4s.Uri.Path.SegmentEncoder
 
 import scala.concurrent.duration.*
 
 class AccountsAppSuite extends munit.CatsEffectSuite with ScalaCheckEffectSuite with Generators {
   lazy val port: Port = port"8081"
-  private val pekkoServer = ResourceSuiteLocalFixture("pekko-server", AccountsApp(port))
-  private val client =
+  private val pekkoServer =
+    ResourceSuiteLocalFixture(
+      "pekko-server",
+      IO.executionContext.toResource >>= { executionContext =>
+        AccountsApp(port)(
+          ActorSystem.wrap(
+            org.apache.pekko.actor.ActorSystem(
+              name = "example-pekko-as",
+              config = Some(
+                PersistenceTestKitPlugin.config
+                  .withFallback(PersistenceTestKitDurableStateStorePlugin.config)
+                  .withFallback(ConfigFactory.defaultApplication)
+                  .resolve()
+              ),
+              defaultExecutionContext = Some(executionContext),
+              classLoader = None
+            )
+          )
+        )
+      }
+    )
+  private lazy val client =
     ResourceSuiteLocalFixture("client", EmberClientBuilder.default[IO].build)
   private lazy val baseUri = Uri.unsafeFromString(s"http://localhost:$port") / "account"
   implicit private lazy val segmentEncoder: SegmentEncoder[AccountID] =

@@ -28,22 +28,22 @@ private[transaction] object TransactionState {
 
   sealed trait Final[TID, BID, Q, R] extends TransactionState[TID, BID, Q, R] {
     def branchVoted(branch: BID, vote: Vote[R]): String \/ TransactionState[TID, BID, Q, R] =
-      "Cannot vote after transaction has finished".asLeft
+      "Received vote after transaction has finished (probably due to at least once delivery), ignoring".asLeft
 
     def clientAborted(reason: Option[R]): String \/ TransactionState[TID, BID, Q, R] =
-      "Cannot abort after transaction has finished".asLeft
+      "Received client abort after transaction has finished, ignoring".asLeft
 
     def timeout(): String \/ TransactionState[TID, BID, Q, R] =
-      "Cannot timeout after transaction has finished".asLeft
+      "Transaction timeout delivered after transaction has finished, ignoring".asLeft
 
     def branchCommitted(branch: BID): String \/ TransactionState[TID, BID, Q, R] =
-      "Cannot commit after transaction has finished".asLeft
+      "Received branch committed notification after transaction has finished (probably due to at least once delivery), ignoring".asLeft
 
     def branchAborted(branch: BID): String \/ TransactionState[TID, BID, Q, R] =
-      "Cannot abort after transaction has finished".asLeft
+      "Received branch aborted notification after transaction has finished (probably due to at least once delivery), ignoring".asLeft
 
     def branchFailed(branch: BID, error: String): String \/ TransactionState[TID, BID, Q, R] =
-      "Cannot fail after transaction has finished".asLeft
+      "Received branch failed notification after transaction has finished (probably due to at least once delivery), ignoring".asLeft
   }
 
   final case class Preparing[TID, BID, Q, R](
@@ -115,13 +115,13 @@ private[transaction] object TransactionState {
     def status: Status[R] = Status.Committing
 
     def branchVoted(branch: BID, vote: Vote[R]): String \/ TransactionState[TID, BID, Q, R] =
-      "Cannot vote after commit".asLeft
+      "Received vote while committing (probably due to at least once delivery), ignoring".asLeft
 
     def clientAborted(reason: Option[R]): String \/ TransactionState[TID, BID, Q, R] =
-      "Cannot abort during commit".asLeft
+      "Received abort while committing (probably due to at least once delivery), ignoring".asLeft
 
     def timeout(): String \/ TransactionState[TID, BID, Q, R] =
-      "Cannot timeout during commit".asLeft
+      "Received transaction timeout while committing, ignoring".asLeft
 
     def branchCommitted(branch: BID): String \/ TransactionState[TID, BID, Q, R] =
       if (hasBranchAlreadyCommitted(branch)) "Branch has already committed".asLeft
@@ -131,8 +131,7 @@ private[transaction] object TransactionState {
         else (Committed(id, query, branches): TransactionState[TID, BID, Q, R]).asRight
       }
 
-    def hasBranchAlreadyCommitted(branch: BID): Boolean =
-      commits.get(branch).exists(identity)
+    def hasBranchAlreadyCommitted(branch: BID): Boolean = commits.get(branch).exists(identity)
 
     def noCommitsYet: Boolean = commits.values.forall(!_)
 
@@ -166,10 +165,10 @@ private[transaction] object TransactionState {
       this.asRight // ignored
 
     def clientAborted(reason: Option[R]): String \/ TransactionState[TID, BID, Q, R] =
-      "Already aborting".asLeft
+      "Received client abort while aborting, ignoring".asLeft
 
     def timeout(): String \/ TransactionState[TID, BID, Q, R] =
-      "Cannot timeout while aborting".asLeft
+      "Received transaction timeout while aborting, ignoring".asLeft
 
     def branchCommitted(branch: BID): String \/ TransactionState[TID, BID, Q, R] =
       "Cannot be committing while aborting".asLeft

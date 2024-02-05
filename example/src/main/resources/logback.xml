@@ -2,11 +2,13 @@
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <charset>utf-8</charset>
-            <pattern>%-20d{dd/MM/YYYY HH:mm:ss.SSS} %-5level %logger - %msg %X{JoinedMdc}%n</pattern>
+            <pattern>%-10d{mm:ss.SSS} %level - %msg %X{JoinedMdc}%n</pattern>
         </encoder>
     </appender>
 
-    <root level="DEBUG">
+    <logger name="endless.transaction.example.app.AccountsApp" level="WARN"/>
+    <logger name="endless.transaction.example" level="INFO"/>
+    <root level="ERROR">
         <appender-ref ref="STDOUT" />
     </root>
 </configuration>

@@ -95,6 +95,7 @@ lazy val example = (project in file("example"))
   .dependsOn(lib % "test->test;compile->compile", pekkoRuntime)
   .settings(name := "endless-transaction-example")
   .settings(
+    addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
     Compile / PB.targets := Seq(scalapb.gen() -> (Compile / sourceManaged).value / "scalapb")
   )
   .settings(
@@ -103,9 +104,11 @@ lazy val example = (project in file("example"))
       `logback-classic`,
       `scalapb-runtime`
     ) ++ pekko ++ pekkoTest ++ http4s ++ `log4cats-core` ++ `log4cats-slf4j` ++
-      (munit ++ `munit-cats-effect-3` ++ `scalacheck-effect-munit` ++ `log4cats-testing` ++ `cats-scalacheck` ++ `cats-effect-testkit`)
-        .map(_ % Test)
+      (munit ++ `munit-cats-effect-3` ++ `scalacheck-effect-munit` ++ `log4cats-testing` ++ `cats-scalacheck` ++ `cats-effect-testkit` ++ scalatest ++
+        Seq(postgresql, `pekko-persistence-jdbc`) ++ slick).map(_ % Test)
   )
+  .enablePlugins(MultiJvmPlugin)
+  .configs(MultiJvm)
   .settings(run / fork := true, publish / skip := true)
 
 lazy val root = project
