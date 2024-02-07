@@ -27,7 +27,6 @@ import org.apache.pekko.util.Timeout
 import org.http4s.server.Server
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 
-import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.*
 
 object AccountsApp {
@@ -49,38 +48,26 @@ object AccountsApp {
   }
 
   def apply(httpPort: Port)(implicit system: ActorSystem[Nothing]): Resource[IO, Server] =
-    IO.executionContext.toResource >>= terminateOnRelease(system) >>= createPekkoApp >>= (
-      deployment => HttpServer(httpPort, deployment.repository)
-    )
+    createPekkoApp >>= (deployment => HttpServer(httpPort, deployment.repository))
 
-  private def terminateOnRelease(
-      actorSystem: ActorSystem[Nothing]
-  )(executionContext: ExecutionContext) =
-    Resource.make(IO.pure(actorSystem))(_ =>
-      IO.fromFuture(IO.blocking {
-        actorSystem.terminate()
-        actorSystem.whenTerminated
-      }).void
-        .timeout(terminationTimeout)
-    )
-
-  private def createPekkoApp(actorSystem: ActorSystem[Nothing]) =
+  private def createPekkoApp(implicit actorSystem: ActorSystem[Nothing]) =
     Resource.eval(Slf4jLogger.create[IO]) >>= { implicit logger =>
-      PekkoCluster.managedResource[IO](actorSystem) >>= { implicit cluster: PekkoCluster[IO] =>
-        implicit val transactor: PekkoTransactor[IO] = PekkoTransactor[IO]
-        implicit val deploymentParameters
-            : PekkoDeploymentParameters[IO, AccountState, AccountEvent] =
-          PekkoDeploymentParameters[IO, AccountState, AccountEvent](customizeBehavior =
-            (_, behavior) => behavior.eventAdapter(pekkoEventAdapter)
+      PekkoCluster.managedResource[IO](actorSystem, terminationTimeout, terminationTimeout) >>= {
+        implicit cluster: PekkoCluster[IO] =>
+          implicit val transactor: PekkoTransactor[IO] = PekkoTransactor[IO]
+          implicit val deploymentParameters
+              : PekkoDeploymentParameters[IO, AccountState, AccountEvent] =
+            PekkoDeploymentParameters[IO, AccountState, AccountEvent](customizeBehavior =
+              (_, behavior) => behavior.eventAdapter(pekkoEventAdapter)
+            )
+          deployRepository[IO, AccountID, AccountState, AccountEvent, Account, Accounts](
+            (sharding: Sharding[IO, AccountID, Account]) =>
+              ShardedAccounts
+                .transfersCoordinator(sharding)
+                .map(coordinator => new ShardedAccounts(sharding, coordinator)),
+            BehaviorInterpreter.lift(AccountEntityBehavior(_)),
+            SideEffectInterpreter.unit
           )
-        deployRepository[IO, AccountID, AccountState, AccountEvent, Account, Accounts](
-          (sharding: Sharding[IO, AccountID, Account]) =>
-            ShardedAccounts
-              .transfersCoordinator(sharding)
-              .map(coordinator => new ShardedAccounts(sharding, coordinator)),
-          BehaviorInterpreter.lift(AccountEntityBehavior(_)),
-          SideEffectInterpreter.unit
-        )
       }
     }
 
