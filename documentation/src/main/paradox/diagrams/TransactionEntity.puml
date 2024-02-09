@@ -1,4 +1,7 @@
 @startuml
+skinparam handwritten true
+skinparam defaultFontName Chalkboard
+
 title Transaction entity state diagram
 [*] --> Preparing : transaction created
 Preparing --> Committing : all branches have voted commit
@@ -7,4 +10,8 @@ Preparing --> Aborting: timeout
 Committing --> Committing: abort requested (ignored)
 Committing --> Committed : all branches confirm commit
 Aborting --> Aborted : all branches confirm abort
+
+note right of Preparing: side-effect: call prepare() on branches
+note left of Committing: side-effect: call commit() on branches
+note right of Aborting: side-effect: call abort() on branches
 @enduml

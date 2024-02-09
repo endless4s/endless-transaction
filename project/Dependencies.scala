@@ -41,6 +41,20 @@ object Dependencies {
   lazy val pekkoTest =
     Seq(`pekko-actor-testkit-typed`, `pekko-persistence-testkit`).map(_ % pekkoVersion)
 
+  lazy val akkaVersion = "2.6.20"
+  lazy val `akka-actor-typed` = "com.typesafe.akka" %% "akka-actor-typed"
+  lazy val `akka-persistence-typed` = "com.typesafe.akka" %% "akka-persistence-typed"
+  lazy val `akka-cluster-typed` = "com.typesafe.akka" %% "akka-cluster-typed"
+  lazy val `akka-cluster-sharding-typed` = "com.typesafe.akka" %% "akka-cluster-sharding-typed"
+
+  lazy val akka = Seq(
+    `akka-actor-typed`,
+    `akka-cluster-typed`,
+    `akka-cluster-sharding-typed`,
+    `akka-persistence-typed`
+  ).map(_ % akkaVersion)
+  lazy val akkaProvided = akka.map(_ % Provided)
+
   lazy val postgresql = "org.postgresql" % "postgresql" % "42.7.1"
   lazy val `pekko-persistence-jdbc` =
     ("org.apache.pekko" %% "pekko-persistence-jdbc" % "1.0.0").excludeAll("org.apache.pekko")
