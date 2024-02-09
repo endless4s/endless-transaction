@@ -17,7 +17,7 @@ import endless.transaction.example.helpers.RetryHelpers.*
 
 class TransferBranch[F[_]: Logger](accountID: AccountID, account: Account[F])(implicit
     temporal: Temporal[F]
-) extends Branch[F, TransferID, AccountID, Transfer, TransferFailure] {
+) extends Branch[F, TransferID, Transfer, TransferFailure] {
   import temporal.*
 
   def prepare(transferID: TransferID, transfer: Transfer): F[Branch.Vote[TransferFailure]] = {

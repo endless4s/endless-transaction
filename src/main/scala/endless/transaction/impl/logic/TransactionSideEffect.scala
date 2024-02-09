@@ -20,7 +20,7 @@ import scala.concurrent.duration.FiniteDuration
 
 private[transaction] final class TransactionSideEffect[F[_]: Temporal, TID, BID, Q, R](
     timeoutSideEffect: TimeoutSideEffect[F],
-    branchForID: BID => Branch[F, TID, BID, Q, R]
+    branchForID: BID => Branch[F, TID, Q, R]
 ) extends SideEffect[
       F,
       TransactionState[TID, BID, Q, R],
@@ -39,9 +39,10 @@ private[transaction] final class TransactionSideEffect[F[_]: Temporal, TID, BID,
 
     lazy val branchEffect: F[Unit] = ifKnown {
       case preparing: Preparing[TID, BID, Q, R] if (trigger match {
-            case AfterPersistence => preparing.noVotesYet // only send prepares once, or on recovery
-            case AfterRecovery    => true
-            case AfterRead        => false
+            case AfterPersistence =>
+              preparing.noVotesYet // having at least a vote means we already sent prepares
+            case AfterRecovery => true
+            case AfterRead     => false
           }) =>
         preparing.branches
           .filterNot(preparing.hasBranchAlreadyVoted)
@@ -50,14 +51,14 @@ private[transaction] final class TransactionSideEffect[F[_]: Temporal, TID, BID,
           .parTraverse { case (branchID, branch) =>
             branch
               .prepare(preparing.id, preparing.query)
-              .flatMap(vote => self.branchVoted(branchID, vote))
+              .flatMap(vote => self.branchVoted(branchID, vote)) // TODO we should retry
               .handleErrorWith(throwable => self.branchFailed(branchID, throwable.getMessage))
           }
           .void
 
       case committing: Committing[TID, BID, Q, R] if (trigger match {
             case AfterPersistence =>
-              committing.noCommitsYet // only send commits once, or on recovery
+              committing.noCommitsYet // having at least a commit means we already sent commits
             case AfterRecovery => true
             case AfterRead     => false
           }) =>
@@ -75,7 +76,7 @@ private[transaction] final class TransactionSideEffect[F[_]: Temporal, TID, BID,
 
       case aborting: Aborting[TID, BID, Q, R] if (trigger match {
             case AfterPersistence =>
-              aborting.noAbortsYet // only send aborts once, or on recovery
+              aborting.noAbortsYet // have at least an abort means we already sent aborts
             case AfterRecovery => true
             case AfterRead     => false
           }) =>
@@ -117,7 +118,7 @@ private[transaction] final class TransactionSideEffect[F[_]: Temporal, TID, BID,
 private[transaction] object TransactionSideEffect {
   def apply[F[_]: Async, TID, BID, Q, R](
       timeout: Option[FiniteDuration],
-      branchForID: BID => Branch[F, TID, BID, Q, R],
+      branchForID: BID => Branch[F, TID, Q, R],
       alg: TransactionAlg[F, TID, BID, Q, R]
   ): F[SideEffect[
     F,

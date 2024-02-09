@@ -27,7 +27,7 @@ class PekkoTransactor[F[_]: Async: Logger](implicit pekkoCluster: PekkoCluster[F
       R: BinaryCodec
   ](
       transactionName: String,
-      branchForID: BID => Branch[F, TID, BID, Q, R],
+      branchForID: BID => Branch[F, TID, Q, R],
       timeout: Option[FiniteDuration]
   ): Resource[F, Coordinator[F, TID, BID, Q, R]] = {
     type S = TransactionState[TID, BID, Q, R]
@@ -63,5 +63,12 @@ class PekkoTransactor[F[_]: Async: Logger](implicit pekkoCluster: PekkoCluster[F
 }
 
 object PekkoTransactor {
+
+  /** Create a new PekkoTransactor
+    * @tparam F
+    *   the effect type
+    * @return
+    *   a new PekkoTransactor
+    */
   def apply[F[_]: Async: Logger: PekkoCluster]: PekkoTransactor[F] = new PekkoTransactor[F]
 }

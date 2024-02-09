@@ -36,7 +36,7 @@ class TransactionSideEffectSuite
             (_: BID) =>
               new TestBranch {
                 override def prepare(transactionID: TID, query: Q): IO[Vote[R]] = IO(Vote.Commit)
-                override def commit(transactionID: TID): IO[Unit] = IO.unit
+                override def commit(transactionId: TID): IO[Unit] = IO.unit
                 override def abort(transactionID: TID): IO[Unit] = IO.unit
               }
           )
@@ -70,7 +70,7 @@ class TransactionSideEffectSuite
             (_: BID) =>
               new TestBranch {
                 override def prepare(transactionID: TID, query: Q): IO[Vote[R]] = IO(Vote.Commit)
-                override def commit(transactionID: TID): IO[Unit] = IO.unit
+                override def commit(transactionId: TID): IO[Unit] = IO.unit
                 override def abort(transactionID: TID): IO[Unit] = IO.unit
               }
           )
@@ -106,7 +106,7 @@ class TransactionSideEffectSuite
             (_: BID) =>
               new TestBranch {
                 override def prepare(transactionID: TID, query: Q): IO[Vote[R]] = IO(Vote.Commit)
-                override def commit(transactionID: TID): IO[Unit] = IO.unit
+                override def commit(transactionId: TID): IO[Unit] = IO.unit
                 override def abort(transactionID: TID): IO[Unit] = IO.unit
               }
           )
@@ -281,7 +281,7 @@ class TransactionSideEffectSuite
             neverTimeout,
             (_: BID) =>
               new TestBranch {
-                override def commit(transactionID: TID): IO[Unit] =
+                override def commit(transactionId: TID): IO[Unit] =
                   IO.unit
               }
           )
@@ -316,7 +316,7 @@ class TransactionSideEffectSuite
             neverTimeout,
             (bid: BID) =>
               new TestBranch {
-                override def commit(transactionID: TID): IO[Unit] =
+                override def commit(transactionId: TID): IO[Unit] =
                   if (bid == committing.branches.head) shouldNotBeCalled else IO.unit
               }
           )
@@ -353,7 +353,7 @@ class TransactionSideEffectSuite
             neverTimeout,
             (_: BID) =>
               new TestBranch {
-                override def commit(transactionID: TID): IO[Unit] = shouldNotBeCalled
+                override def commit(transactionId: TID): IO[Unit] = shouldNotBeCalled
               }
           )
         )
@@ -382,7 +382,7 @@ class TransactionSideEffectSuite
             neverTimeout,
             (_: BID) =>
               new TestBranch {
-                override def commit(transactionID: TID): IO[Unit] =
+                override def commit(transactionId: TID): IO[Unit] =
                   IO.raiseError(new Exception("boom"))
               }
           )
@@ -546,9 +546,9 @@ class TransactionSideEffectSuite
     }
   }
 
-  trait TestBranch extends Branch[IO, TID, BID, Q, R] {
+  trait TestBranch extends Branch[IO, TID, Q, R] {
     def prepare(transactionID: TID, query: Q): IO[Vote[R]] = shouldNotBeCalled
-    def commit(transactionID: TID): IO[Unit] = shouldNotBeCalled
+    def commit(transactionId: TID): IO[Unit] = shouldNotBeCalled
     def abort(transactionID: TID): IO[Unit] = shouldNotBeCalled
   }
 

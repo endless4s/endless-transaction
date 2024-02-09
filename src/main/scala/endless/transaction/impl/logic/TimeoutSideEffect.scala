@@ -10,11 +10,11 @@ import endless.transaction.Transaction.Status
 
 import scala.concurrent.duration.FiniteDuration
 
-trait TimeoutSideEffect[F[_]] {
+private[transaction] trait TimeoutSideEffect[F[_]] {
   def scheduleTimeoutAccordingTo[R](status: Status[R]): F[Unit]
 }
 
-object TimeoutSideEffect {
+private[transaction] object TimeoutSideEffect {
   private type UnitFiber[F[_]] = Fiber[F, Throwable, Unit]
 
   def apply[F[_]: Temporal](
