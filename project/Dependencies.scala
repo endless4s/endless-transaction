@@ -47,6 +47,9 @@ object Dependencies {
   lazy val `akka-cluster-typed` = "com.typesafe.akka" %% "akka-cluster-typed"
   lazy val `akka-cluster-sharding-typed` = "com.typesafe.akka" %% "akka-cluster-sharding-typed"
 
+  lazy val `akka-actor-testkit-typed` = "com.typesafe.akka" %% "akka-actor-testkit-typed"
+  lazy val `akka-persistence-testkit` = "com.typesafe.akka" %% "akka-persistence-testkit"
+
   lazy val akka = Seq(
     `akka-actor-typed`,
     `akka-cluster-typed`,
@@ -54,6 +57,8 @@ object Dependencies {
     `akka-persistence-typed`
   ).map(_ % akkaVersion)
   lazy val akkaProvided = akka.map(_ % Provided)
+  lazy val akkaTest =
+    Seq(`akka-actor-testkit-typed`, `akka-persistence-testkit`).map(_ % akkaVersion)
 
   lazy val postgresql = "org.postgresql" % "postgresql" % "42.7.1"
   lazy val `pekko-persistence-jdbc` =

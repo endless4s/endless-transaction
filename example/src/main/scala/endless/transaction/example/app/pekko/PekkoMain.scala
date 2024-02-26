@@ -1,15 +1,12 @@
-package endless.transaction.example.app
+package endless.transaction.example.app.pekko
 
 import cats.effect.{ExitCode, IO, IOApp}
 import com.comcast.ip4s.*
 import com.typesafe.config.ConfigFactory
 import org.apache.pekko.actor.typed.ActorSystem
-import org.apache.pekko.persistence.testkit.{
-  PersistenceTestKitDurableStateStorePlugin,
-  PersistenceTestKitPlugin
-}
+import org.apache.pekko.persistence.testkit.{PersistenceTestKitDurableStateStorePlugin, PersistenceTestKitPlugin}
 
-object Main extends IOApp {
+object PekkoMain extends IOApp {
   @SuppressWarnings(Array("org.wartremover.warts.OptionPartial"))
   def run(args: List[String]): IO[ExitCode] = {
     (for {
@@ -29,7 +26,7 @@ object Main extends IOApp {
           )
         )
       ).toResource
-      app <- AccountsApp(port"8080")(actorSystem)
+      app <- PekkoAccountsApp(port"8080")(actorSystem)
     } yield app).useForever.as(ExitCode.Success)
   }
 

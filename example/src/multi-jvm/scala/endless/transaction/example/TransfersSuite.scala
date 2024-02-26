@@ -11,7 +11,7 @@ import cats.syntax.show.*
 import com.comcast.ip4s.*
 import com.typesafe.config.{ConfigFactory, ConfigValueFactory}
 import endless.transaction.example.Common.*
-import endless.transaction.example.app.AccountsApp
+import endless.transaction.example.app.pekko.PekkoAccountsApp
 import org.apache.pekko.actor.typed.ActorSystem
 import org.apache.pekko.persistence.jdbc.testkit.scaladsl.SchemaUtils
 import org.http4s.Method.*
@@ -42,7 +42,7 @@ class StressSuiteMultiJvmNode1 extends AnyFunSuite {
         .toResource
       _ <- logger.info("Creating the database journal").toResource
       _ <- initDb.toResource
-      _ <- AccountsApp(httpPort)
+      _ <- PekkoAccountsApp(httpPort)
       _ <- logger.info("Waiting for cluster formation").toResource
       _ <- IO.sleep(clusterFormationWaitingTime).toResource
       _ <- logger.info("Creating origin accounts").toResource
@@ -222,7 +222,7 @@ object Common {
       implicit0(system: ActorSystem[Nothing]) <- IO.executionContext
         .map(actorSystemFor(arteryPort, _))
         .toResource
-      _ <- AccountsApp(httpPort)
+      _ <- PekkoAccountsApp(httpPort)
       _ <- logger.info("Waiting for cluster formation").toResource
       _ <- IO.sleep(clusterFormationWaitingTime).toResource
       _ <- waitForExpectedBalanceOnDestinationAccounts(

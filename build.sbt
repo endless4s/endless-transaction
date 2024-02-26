@@ -93,7 +93,7 @@ lazy val akkaRuntime = (project in file("akka"))
 lazy val example = (project in file("example"))
   .settings(commonSettings*)
   .settings(scalaVersion := scala213)
-  .dependsOn(lib % "test->test;compile->compile", pekkoRuntime)
+  .dependsOn(lib % "test->test;compile->compile", pekkoRuntime, akkaRuntime)
   .settings(name := "endless-transaction-example")
   .settings(
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
@@ -104,7 +104,7 @@ lazy val example = (project in file("example"))
       `endless-core`,
       `logback-classic`,
       `scalapb-runtime`
-    ) ++ pekko ++ pekkoTest ++ http4s ++ `log4cats-core` ++ `log4cats-slf4j` ++
+    ) ++ pekko ++ pekkoTest ++ akka ++ akkaTest ++ http4s ++ `log4cats-core` ++ `log4cats-slf4j` ++
       (munit ++ `munit-cats-effect-3` ++ `scalacheck-effect-munit` ++ `log4cats-testing` ++ `cats-scalacheck` ++ `cats-effect-testkit` ++ scalatest ++
         Seq(postgresql, `pekko-persistence-jdbc`) ++ slick).map(_ % Test)
   )

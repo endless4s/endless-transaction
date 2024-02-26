@@ -1,4 +1,4 @@
-package endless.transaction.example.app
+package endless.transaction.example.app.akka
 
 import cats.effect.IO
 import cats.effect.kernel.Resource
@@ -7,11 +7,12 @@ import com.comcast.ip4s.Port
 import endless.core.entity.{EntityNameProvider, Sharding}
 import endless.core.interpret.{BehaviorInterpreter, SideEffectInterpreter}
 import endless.core.protocol.EntityIDCodec
-import endless.runtime.pekko.deploy.PekkoCluster
-import endless.runtime.pekko.deploy.PekkoDeployer.PekkoDeploymentParameters
-import endless.runtime.pekko.syntax.deploy.*
+import endless.runtime.akka.deploy.AkkaCluster
+import endless.runtime.akka.deploy.AkkaDeployer.AkkaDeploymentParameters
+import endless.runtime.akka.syntax.deploy.*
 import endless.transaction.example.adapter.AccountEventAdapter
 import endless.transaction.example.algebra.{Account, Accounts}
+import endless.transaction.example.app.HttpServer
 import endless.transaction.example.data.{AccountEvent, AccountID, AccountState, TransferParameters}
 import endless.transaction.example.logic.{
   AccountEntityBehavior,
@@ -20,16 +21,16 @@ import endless.transaction.example.logic.{
   ShardedAccounts
 }
 import endless.transaction.example.proto.events
-import endless.transaction.pekko.PekkoTransactor
-import org.apache.pekko.actor.typed.ActorSystem
-import org.apache.pekko.persistence.typed.{EventAdapter, EventSeq}
-import org.apache.pekko.util.Timeout
+import endless.transaction.akka.AkkaTransactor
+import akka.actor.typed.ActorSystem
+import akka.persistence.typed.{EventAdapter, EventSeq}
+import akka.util.Timeout
 import org.http4s.server.Server
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 import scala.concurrent.duration.*
 
-object AccountsApp {
+object AkkaAccountsApp {
   private implicit val accountEntityNameProvider: EntityNameProvider[AccountID] = () => "account"
   private implicit val accountIDCodec: EntityIDCodec[AccountID] =
     EntityIDCodec(_.value, AccountID(_))
@@ -48,16 +49,16 @@ object AccountsApp {
   }
 
   def apply(httpPort: Port)(implicit system: ActorSystem[Nothing]): Resource[IO, Server] =
-    createPekkoApp >>= (deployment => HttpServer(httpPort, deployment.repository))
+    createAkkaApp >>= (deployment => HttpServer(httpPort, deployment.repository))
 
-  private def createPekkoApp(implicit actorSystem: ActorSystem[Nothing]) =
+  private def createAkkaApp(implicit actorSystem: ActorSystem[Nothing]) =
     Resource.eval(Slf4jLogger.create[IO]) >>= { implicit logger =>
-      PekkoCluster.managedResource[IO](actorSystem, terminationTimeout, terminationTimeout) >>= {
-        implicit cluster: PekkoCluster[IO] =>
-          implicit val transactor: PekkoTransactor[IO] = PekkoTransactor[IO]
+      AkkaCluster.managedResource[IO](actorSystem, terminationTimeout, terminationTimeout) >>= {
+        implicit cluster: AkkaCluster[IO] =>
+          implicit val transactor: AkkaTransactor[IO] = AkkaTransactor[IO]
           implicit val deploymentParameters
-              : PekkoDeploymentParameters[IO, AccountState, AccountEvent] =
-            PekkoDeploymentParameters[IO, AccountState, AccountEvent](customizeBehavior =
+              : AkkaDeploymentParameters[IO, AccountState, AccountEvent] =
+            AkkaDeploymentParameters[IO, AccountState, AccountEvent](customizeBehavior =
               (_, behavior) => behavior.eventAdapter(pekkoEventAdapter)
             )
           deployRepository[IO, AccountID, AccountState, AccountEvent, Account, Accounts](
