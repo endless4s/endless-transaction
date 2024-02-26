@@ -12,7 +12,11 @@ import endless.transaction.Transaction.Status
 import endless.transaction.impl.Generators
 import endless.transaction.impl.algebra.{TransactionAlg, TransactionCreator}
 import endless.transaction.impl.data.TransactionState
+import endless.transaction.impl.helpers.RetryHelpers.RetryParameters
 import org.scalacheck.effect.PropF.forAllF
+import org.typelevel.log4cats.testing.TestingLogger
+
+import scala.concurrent.duration.DurationInt
 
 class TransactionSideEffectSuite
     extends munit.CatsEffectSuite
@@ -22,8 +26,11 @@ class TransactionSideEffectSuite
   private val neverTimeout = new TimeoutSideEffect[IO] {
     override def scheduleTimeoutAccordingTo[R](status: Status[R]): IO[Unit] = IO.unit
   }
+  implicit val testLogger: TestingLogger[IO] = TestingLogger.impl[IO]()
+  implicit val retryParameters: RetryParameters = RetryParameters(10.millis, 2)
 
   test("schedules timeout according to state (after persistence or recovery)") {
+
     forAllF(transactionStateGen, persistenceOrRecoveryTriggerGen) { (state, trigger) =>
       for {
         scheduleCalled <- IO.ref(false)
@@ -542,6 +549,49 @@ class TransactionSideEffectSuite
           case Status.Failed(_) => true
           case _                => false
         }))
+      } yield ()
+    }
+  }
+
+  test("retries notifying self about preparation") {
+    forAllF(preparingGen) { preparing =>
+      for {
+        stateRef <- IO.ref[TransactionState[TID, BID, Q, R]](preparing)
+        sideEffect <- IO(
+          new TransactionSideEffect[IO, TID, BID, Q, R](
+            neverTimeout,
+            (_: BID) =>
+              new TestBranch {
+                override def prepare(transactionID: TID, query: Q): IO[Vote[R]] = IO(Vote.Commit)
+
+              }
+          )
+        )
+        attemptsRef <- IO.ref(preparing.branches.map(_ -> 0).toMap)
+        effector <- Effector
+          .apply[IO, TransactionState[
+            TID,
+            BID,
+            Q,
+            R
+          ], ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T](
+            new SelfEntity {
+              override def branchVoted(branch: BID, vote: Vote[R]): IO[Unit] =
+                for {
+                  attempt <- attemptsRef.get.map(_(branch))
+                  _ <-
+                    if (attempt < retryParameters.maxRetries)
+                      attemptsRef.update(_.updated(branch, attempt + 1)) >> IO.raiseError(
+                        new Exception("boom")
+                      )
+                    else
+                      stateRef.update(_.branchVoted(branch, vote).fold(fail(_), identity))
+                } yield ()
+            },
+            Some(preparing)
+          )
+        _ <- sideEffect.apply(Trigger.AfterRecovery, effector)
+        _ <- assertIOBoolean(stateRef.get.map(_.status == Status.Committing))
       } yield ()
     }
   }

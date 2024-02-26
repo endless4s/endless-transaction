@@ -22,10 +22,48 @@ import scala.concurrent.duration.*
   *   the abort reason type
   */
 trait Transaction[F[_], BID, Q, R] {
+
+  /** Retrieve the query.
+    * @return
+    *   the query, or unknown if the transaction is not found
+    */
   def query: F[Unknown.type \/ Q]
+
+  /** Retrieve identifiers of participating branches.
+    * @return
+    *   set of branch identifiers, or unknown if the transaction is not found
+    */
   def branches: F[Unknown.type \/ Set[BID]]
+
+  /** Retrieve the status of the transaction.
+    * @return
+    *   the status of the transaction, or unknown if the transaction is not found
+    */
   def status: F[Unknown.type \/ Status[R]]
+
+  /** Request an abort of the transaction.
+    * @param reason
+    *   the reason for the abort
+    * @return
+    *   confirmation that a client-requested abort has been initiated, or an error if the
+    *   transaction is no longer in a state where it can be aborted (or is not found)
+    */
   def abort(reason: Option[R] = None): F[AbortError \/ Unit]
+
+  /** Triggers a refresh of the current phase on branches that are still pending (preparing,
+    * committing or aborting).
+    *
+    * @note
+    *   Normally, invoking this is not needed, but it can be useful in certain specific scenarios:
+    *   - if pending transaction entities are not recovered automatically (remember-entities is
+    *     overridden to false) then this can be used by a different recovery mechanism to implement
+    *     the same resilience logic
+    *   - if a branch has been stuck in a phase for a long time and you want to force a retry
+    *   - offer a troubleshooting API to force transaction retries
+    * @return
+    *   confirmation that the refresh has been initiated
+    */
+//  def triggerRefreshOfPendingBranches(): F[Unit]
 }
 
 object Transaction {

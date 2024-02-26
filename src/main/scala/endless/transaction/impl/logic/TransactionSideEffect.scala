@@ -1,11 +1,13 @@
 package endless.transaction.impl.logic
 
+import cats.Show
 import cats.effect.kernel.{Async, Temporal}
 import cats.syntax.applicative.*
 import cats.syntax.applicativeError.*
 import cats.syntax.flatMap.*
 import cats.syntax.functor.*
 import cats.syntax.parallel.*
+import cats.syntax.show.*
 import cats.effect.kernel.implicits.parallelForGenSpawn
 import endless.core.entity.SideEffect.Trigger
 import endless.core.entity.SideEffect.Trigger.{AfterPersistence, AfterRead, AfterRecovery}
@@ -15,13 +17,22 @@ import endless.transaction.Transaction.Status
 import endless.transaction.impl.algebra.TransactionAlg
 import endless.transaction.impl.data.TransactionState
 import endless.transaction.impl.data.TransactionState.*
+import endless.transaction.impl.helpers.RetryHelpers.*
+import org.typelevel.log4cats.Logger
 
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration.{Duration, FiniteDuration}
 
-private[transaction] final class TransactionSideEffect[F[_]: Temporal, TID, BID, Q, R](
+private[transaction] final class TransactionSideEffect[
+    F[_]: Temporal: Logger,
+    TID,
+    BID: Show,
+    Q,
+    R
+](
     timeoutSideEffect: TimeoutSideEffect[F],
     branchForID: BID => Branch[F, TID, Q, R]
-) extends SideEffect[
+)(implicit retryParameters: RetryParameters)
+    extends SideEffect[
       F,
       TransactionState[TID, BID, Q, R],
       ({ type T[G[_]] = TransactionAlg[G, TID, BID, Q, R] })#T
@@ -48,12 +59,7 @@ private[transaction] final class TransactionSideEffect[F[_]: Temporal, TID, BID,
           .filterNot(preparing.hasBranchAlreadyVoted)
           .map(zipWithBranch)
           .toList
-          .parTraverse { case (branchID, branch) =>
-            branch
-              .prepare(preparing.id, preparing.query)
-              .flatMap(vote => self.branchVoted(branchID, vote)) // TODO we should retry
-              .handleErrorWith(throwable => self.branchFailed(branchID, throwable.getMessage))
-          }
+          .parTraverse((prepareBranch(preparing) _).tupled)
           .void
 
       case committing: Committing[TID, BID, Q, R] if (trigger match {
@@ -66,12 +72,7 @@ private[transaction] final class TransactionSideEffect[F[_]: Temporal, TID, BID,
           .filterNot(committing.hasBranchAlreadyCommitted)
           .map(zipWithBranch)
           .toList
-          .parTraverse { case (branchID, branch) =>
-            branch
-              .commit(committing.id)
-              .flatMap(_ => self.branchCommitted(branchID))
-              .handleErrorWith(throwable => self.branchFailed(branchID, throwable.getMessage))
-          }
+          .parTraverse((commitBranch(committing) _).tupled)
           .void
 
       case aborting: Aborting[TID, BID, Q, R] if (trigger match {
@@ -84,15 +85,61 @@ private[transaction] final class TransactionSideEffect[F[_]: Temporal, TID, BID,
           .filterNot(aborting.hasBranchAlreadyAborted)
           .map(zipWithBranch)
           .toList
-          .parTraverse { case (branchID, branch) =>
-            branch
-              .abort(aborting.id)
-              .flatMap(_ => self.branchAborted(branchID))
-              .handleErrorWith(throwable => self.branchFailed(branchID, throwable.getMessage))
-          }
+          .parTraverse((abortBranch(aborting) _).tupled)
           .void
 
       case _ => ().pure
+    }
+
+    def prepareBranch(
+        state: Preparing[TID, BID, Q, R]
+    )(branchID: BID, branch: Branch[F, TID, Q, R]) = branch
+      .prepare(state.id, state.query)
+      .flatMap(vote =>
+        self
+          .branchVoted(branchID, vote)
+          .retryWithBackoff(warnAboutRetry("vote", branchID))
+      )
+      .handleErrorWith(throwable =>
+        self
+          .branchFailed(branchID, throwable.getMessage)
+          .retryWithBackoff(warnAboutRetry("failure", branchID))
+          .handleErrorWith(logDefinitiveFailure(branchID))
+      )
+
+    def commitBranch(state: Committing[TID, BID, Q, R])(
+        branchID: BID,
+        branch: Branch[F, TID, Q, R]
+    ) = branch
+      .commit(state.id)
+      .flatMap(_ =>
+        self
+          .branchCommitted(branchID)
+          .retryWithBackoff(warnAboutRetry("commit", branchID))
+      )
+      .handleErrorWith(throwable =>
+        self
+          .branchFailed(branchID, throwable.getMessage)
+          .retryWithBackoff(warnAboutRetry("failure", branchID))
+          .handleErrorWith(logDefinitiveFailure(branchID))
+      )
+
+    def abortBranch(
+        state: Aborting[TID, BID, Q, R]
+    )(branchID: BID, branch: Branch[F, TID, Q, R]) = {
+      branch
+        .abort(state.id)
+        .flatMap(_ =>
+          self
+            .branchAborted(branchID)
+            .retryWithBackoff(warnAboutRetry("abort", branchID))
+        )
+        .handleErrorWith(throwable =>
+          self
+            .branchFailed(branchID, throwable.getMessage)
+            .retryWithBackoff(warnAboutRetry("failure", branchID))
+            .handleErrorWith(logDefinitiveFailure(branchID))
+        )
     }
 
     lazy val timeoutEffect =
@@ -112,15 +159,31 @@ private[transaction] final class TransactionSideEffect[F[_]: Temporal, TID, BID,
     }
   }
 
+  private def logDefinitiveFailure(branchID: BID)(throwable: Throwable) = {
+    Logger[F].error(throwable)(
+      show"Definitive failure to notify transaction about failure for branch $branchID"
+    )
+  }
+
+  private def warnAboutRetry(operation: String, branchID: BID): OnError[F] = (
+      error: Throwable,
+      delay: Duration,
+      attemptNumber: Int,
+      maxRetries: Int
+  ) =>
+    Logger[F].warn(error)(
+      show"Failed to notify transaction about $operation for branch $branchID, retrying in $delay (attempt #$attemptNumber out of $maxRetries)"
+    )
+
   private def zipWithBranch(branchID: BID) = branchID -> branchForID(branchID)
 }
 
 private[transaction] object TransactionSideEffect {
-  def apply[F[_]: Async, TID, BID, Q, R](
+  def apply[F[_]: Async: Logger, TID, BID: Show, Q, R](
       timeout: Option[FiniteDuration],
       branchForID: BID => Branch[F, TID, Q, R],
       alg: TransactionAlg[F, TID, BID, Q, R]
-  ): F[SideEffect[
+  )(implicit retryParameters: RetryParameters): F[SideEffect[
     F,
     TransactionState[TID, BID, Q, R],
     ({ type T[G[_]] = TransactionAlg[G, TID, BID, Q, R] })#T

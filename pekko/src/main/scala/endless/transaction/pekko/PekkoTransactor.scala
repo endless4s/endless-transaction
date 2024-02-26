@@ -7,6 +7,7 @@ import endless.runtime.pekko.deploy.PekkoDeployer.PekkoDeploymentParameters
 import endless.runtime.pekko.syntax.deploy.DeploymentParameters
 import endless.transaction.impl.adapter.TransactionEventAdapter
 import endless.transaction.impl.data.{TransactionEvent, TransactionState}
+import endless.transaction.impl.helpers.RetryHelpers
 import endless.transaction.proto
 import endless.transaction.proto.events
 import endless.transaction.{BinaryCodec, Branch, Coordinator, StringCodec, Transactor}
@@ -18,7 +19,6 @@ import org.apache.pekko.util.Timeout
 
 class PekkoTransactor[F[_]: Async: Logger](implicit pekkoCluster: PekkoCluster[F])
     extends Transactor[F] {
-  private implicit val askTimeout: Timeout = Timeout(1.minute)
 
   def coordinator[
       TID: StringCodec: BinaryCodec,
@@ -32,6 +32,8 @@ class PekkoTransactor[F[_]: Async: Logger](implicit pekkoCluster: PekkoCluster[F
   ): Resource[F, Coordinator[F, TID, BID, Q, R]] = {
     type S = TransactionState[TID, BID, Q, R]
     type E = TransactionEvent[TID, BID, Q, R]
+    val config = Config.load()
+    implicit val askTimeout: Timeout = Timeout(config.askTimeout)
     val eventAdapter = new TransactionEventAdapter[TID, BID, Q, R]()
     implicit val pekkoDeploymentParameters: DeploymentParameters[F, TID, S, E] = {
       PekkoDeploymentParameters[F, S, E](
@@ -53,6 +55,7 @@ class PekkoTransactor[F[_]: Async: Logger](implicit pekkoCluster: PekkoCluster[F
           )
       )
     }
+    implicit val retryParameters: RetryHelpers.RetryParameters = config.retries.parameters
     deployEntityBasedCoordinator(
       transactionName,
       branchForID,

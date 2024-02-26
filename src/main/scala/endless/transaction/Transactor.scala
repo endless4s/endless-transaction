@@ -8,6 +8,7 @@ import endless.core.interpret.{BehaviorInterpreter, RepositoryInterpreter}
 import endless.core.protocol.CommandProtocol
 import endless.transaction.impl.algebra.TransactionAlg
 import endless.transaction.impl.data.{TransactionEvent, TransactionState}
+import endless.transaction.impl.helpers.RetryHelpers.RetryParameters
 import endless.transaction.impl.logic.{
   ShardedCoordinator,
   TransactionEntityBehavior,
@@ -98,6 +99,7 @@ trait Transactor[F[_]] {
       timeout: Option[FiniteDuration],
       deployer: Deployer
   )(implicit
+      retryParameters: RetryParameters,
       deploymentParameters: deployer.DeploymentParameters[F, TID, TransactionState[
         TID,
         BID,
