@@ -20,7 +20,7 @@ import org.typelevel.log4cats.Logger
 
 import scala.concurrent.duration.FiniteDuration
 
-/** The transactor is the entry point provided by the underlying runtime to create distributed
+/** The transactor is the entrypoint provided by the underlying runtime to create distributed
   * transaction coordinators for any type of transaction.
   * @tparam F
   *   the effect type

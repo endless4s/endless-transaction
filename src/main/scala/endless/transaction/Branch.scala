@@ -4,7 +4,7 @@ import endless.transaction.Branch.Vote
 
 /** A branch defines behavior for the various phases of the 2PC protocol for a certain transaction
   * type. The branch is responsible for preparing, committing and aborting the transaction. The
-  * coordinator makes use of an instance of branch for each branch ID.
+  * coordinator instantiates a branch for each transaction and branch ID.
   * @tparam F
   *   the effect type
   * @tparam TID

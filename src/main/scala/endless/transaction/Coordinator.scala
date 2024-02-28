@@ -55,8 +55,11 @@ trait Coordinator[F[_], TID, BID, Q, R] {
     * transaction is already completed).
     *
     * @note
-    *   pending transactions are recovered automatically upon coordinator startup, no need to access
-    *   them via this method unless further interaction is required.
+    *   by default, pending transactions are recovered automatically upon coordinator startup
+    *   (thanks to remember-entities). There is therefore no need to access them via this method
+    *   unless further interaction is required. However, if an alternative to remember-entities is
+    *   needed, this method chained with e.g. retrieving the status can be used to trigger recovery
+    *   and associated side-effects for pending transactions.
     * @param id
     *   the transaction id
     * @return

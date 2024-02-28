@@ -10,8 +10,16 @@ import endless.transaction.Transaction.*
 
 import scala.concurrent.duration.*
 
-/** This defines a handle on a distributed transaction, which can be used to inspect its status,
+/** This defines a handle to a distributed transaction, which can be used to inspect its status,
   * retrieve its query and participating branches and trigger a client abort.
+  *
+  * @note
+  *   Calling any of these methods will lead to transaction recovery. This side-effect can be used
+  *   to implement resilience logic for pending transactions, if an alternative to remember-entities
+  *   (enabled by default) is needed. For instance, pending transactions can be tracked in a
+  *   persistent list and their status updated upon node restart - this will indirectly also ensure
+  *   that preparation, commit and abort requests are re-issued if the node crashes during the
+  *   transaction.
   * @tparam F
   *   the effect type
   * @tparam BID
@@ -49,21 +57,6 @@ trait Transaction[F[_], BID, Q, R] {
     *   transaction is no longer in a state where it can be aborted (or is not found)
     */
   def abort(reason: Option[R] = None): F[AbortError \/ Unit]
-
-  /** Triggers a refresh of the current phase on branches that are still pending (preparing,
-    * committing or aborting).
-    *
-    * @note
-    *   Normally, invoking this is not needed, but it can be useful in certain specific scenarios:
-    *   - if pending transaction entities are not recovered automatically (remember-entities is
-    *     overridden to false) then this can be used by a different recovery mechanism to implement
-    *     the same resilience logic
-    *   - if a branch has been stuck in a phase for a long time and you want to force a retry
-    *   - offer a troubleshooting API to force transaction retries
-    * @return
-    *   confirmation that the refresh has been initiated
-    */
-//  def triggerRefreshOfPendingBranches(): F[Unit]
 }
 
 object Transaction {
@@ -118,7 +111,7 @@ object Transaction {
       */
     sealed trait Final[+R] extends Status[R]
 
-    /** Prepares have been issued by the coordinator and it is now waiting for votes from the
+    /** Prepares have been issued by the coordinator, which is now waiting for votes from the
       * participating branches.
       */
     case object Preparing extends Pending[Nothing]
