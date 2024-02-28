@@ -6,7 +6,7 @@ import com.typesafe.config.ConfigFactory
 import org.apache.pekko.actor.typed.ActorSystem
 import org.apache.pekko.persistence.testkit.{PersistenceTestKitDurableStateStorePlugin, PersistenceTestKitPlugin}
 
-object PekkoMain extends IOApp {
+object Main extends IOApp {
   @SuppressWarnings(Array("org.wartremover.warts.OptionPartial"))
   def run(args: List[String]): IO[ExitCode] = {
     (for {

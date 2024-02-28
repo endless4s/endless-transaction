@@ -15,6 +15,8 @@ val commonSettings = Seq(
     Wart.DefaultArguments,
     Wart.Recursion
   ),
+  scalaVersion := scala213,
+  crossScalaVersions := Seq(scala213, scala3),
   libraryDependencies ++= (CrossVersion.partialVersion(scalaVersion.value) match {
     case Some((2, _)) =>
       Seq(compilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full))
@@ -57,9 +59,8 @@ inThisBuild(
   )
 )
 
-lazy val lib = (project in file("."))
+lazy val lib = (project in file("lib"))
   .settings(commonSettings*)
-  .settings(scalaVersion := scala213, crossScalaVersions := Seq(scala213, scala3))
   .settings(name := "endless-transaction")
   .settings(
     Compile / PB.targets := Seq(
@@ -79,22 +80,18 @@ lazy val lib = (project in file("."))
 lazy val pekkoRuntime = (project in file("pekko"))
   .dependsOn(lib)
   .settings(commonSettings*)
-  .settings(scalaVersion := scala213, crossScalaVersions := Seq(scala213, scala3))
   .settings(libraryDependencies ++= Seq(`endless-runtime-pekko`) ++ pekkoProvided)
   .settings(name := "endless-transaction-pekko")
 
 lazy val akkaRuntime = (project in file("akka"))
   .dependsOn(lib)
   .settings(commonSettings*)
-  .settings(scalaVersion := scala213, crossScalaVersions := Seq(scala213, scala3))
   .settings(libraryDependencies ++= Seq(`endless-runtime-akka`) ++ akkaProvided)
   .settings(name := "endless-transaction-akka")
 
 lazy val example = (project in file("example"))
   .settings(commonSettings*)
-  .settings(scalaVersion := scala213)
   .dependsOn(lib % "test->test;compile->compile", pekkoRuntime, akkaRuntime)
-  .settings(name := "endless-transaction-example")
   .settings(
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
     Compile / PB.targets := Seq(scalapb.gen() -> (Compile / sourceManaged).value / "scalapb")
@@ -167,10 +164,13 @@ lazy val documentation = (project in file("documentation"))
   )
 
 lazy val root = project
-  .aggregate(lib, pekkoRuntime, akkaRuntime, example, documentation)
+  .in(file("."))
   .dependsOn(example)
+  .aggregate(lib, pekkoRuntime, akkaRuntime, example, documentation)
   .settings(commonSettings*)
   .settings(crossScalaVersions := Nil)
   .settings(publish / skip := true)
+  .settings(Compile / run / fork := true)
+  .settings(name := "endless-transaction-root")
 
-Compile / mainClass := Some("endless.transaction.example.app.Main")
+Compile / mainClass := Some("endless.transaction.example.app.pekko.Main")
