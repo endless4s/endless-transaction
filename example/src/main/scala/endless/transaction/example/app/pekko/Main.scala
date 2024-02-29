@@ -4,7 +4,10 @@ import cats.effect.{ExitCode, IO, IOApp}
 import com.comcast.ip4s.*
 import com.typesafe.config.ConfigFactory
 import org.apache.pekko.actor.typed.ActorSystem
-import org.apache.pekko.persistence.testkit.{PersistenceTestKitDurableStateStorePlugin, PersistenceTestKitPlugin}
+import org.apache.pekko.persistence.testkit.{
+  PersistenceTestKitDurableStateStorePlugin,
+  PersistenceTestKitPlugin
+}
 
 object Main extends IOApp {
   @SuppressWarnings(Array("org.wartremover.warts.OptionPartial"))

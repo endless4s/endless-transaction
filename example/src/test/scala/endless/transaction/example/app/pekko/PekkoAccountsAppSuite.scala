@@ -9,7 +9,10 @@ import endless.transaction.example.Generators
 import endless.transaction.example.data.{AccountID, PosAmount}
 import munit.ScalaCheckEffectSuite
 import org.apache.pekko.actor.typed.ActorSystem
-import org.apache.pekko.persistence.testkit.{PersistenceTestKitDurableStateStorePlugin, PersistenceTestKitPlugin}
+import org.apache.pekko.persistence.testkit.{
+  PersistenceTestKitDurableStateStorePlugin,
+  PersistenceTestKitPlugin
+}
 import org.http4s.Method.*
 import org.http4s.Uri
 import org.http4s.Uri.Path.SegmentEncoder
@@ -19,7 +22,10 @@ import org.scalacheck.effect.PropF.forAllF
 
 import scala.concurrent.duration.*
 
-class PekkoAccountsAppSuite extends munit.CatsEffectSuite with ScalaCheckEffectSuite with Generators {
+class PekkoAccountsAppSuite
+    extends munit.CatsEffectSuite
+    with ScalaCheckEffectSuite
+    with Generators {
   lazy val port: Port = port"8081"
   private val pekkoServer =
     ResourceSuiteLocalFixture(

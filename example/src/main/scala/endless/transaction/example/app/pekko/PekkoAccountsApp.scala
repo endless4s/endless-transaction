@@ -14,7 +14,12 @@ import endless.transaction.example.adapter.AccountEventAdapter
 import endless.transaction.example.algebra.{Account, Accounts}
 import endless.transaction.example.app.HttpServer
 import endless.transaction.example.data.{AccountEvent, AccountID, AccountState, TransferParameters}
-import endless.transaction.example.logic.{AccountEntityBehavior, AccountEventApplier, AccountProtocol, ShardedAccounts}
+import endless.transaction.example.logic.{
+  AccountEntityBehavior,
+  AccountEventApplier,
+  AccountProtocol,
+  ShardedAccounts
+}
 import endless.transaction.example.proto.events
 import endless.transaction.pekko.PekkoTransactor
 import org.apache.pekko.actor.typed.ActorSystem
