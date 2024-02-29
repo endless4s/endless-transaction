@@ -127,9 +127,9 @@ object Common {
 
   val dbInitializationWaitingTime = 2.seconds
   val clusterFormationWaitingTime = 2.seconds
-  val atLeastOneNodeUpWaitingTime = 3.minutes
+  val atLeastOneNodeUpWaitingTime = 5.minutes
   val nodeRestartWaitingTime = 5.seconds
-  val minRestartDelaySeconds = 5
+  val minRestartDelaySeconds = 8
   val maxRestartDelaySeconds = 20
   val testTimeout = atLeastOneNodeUpWaitingTime + 1.minute
   val checkRetryTimeout = 5.seconds
