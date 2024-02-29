@@ -8,10 +8,11 @@
 
     <logger name="endless.transaction.example.app.pekko.PekkoAccountsApp" level="WARN"/>
     <logger name="endless.transaction.example" level="INFO"/>
+    <logger name="endless.runtime.pekko.deploy" level="INFO"/>
     <logger name="org.apache.pekko" level="INFO"/>
     <logger name="com.zaxxer.hikari" level="WARN"/>
     <logger name="slick" level="WARN"/>
-    <root level="DEBUG">
+    <root level="INFO">
         <appender-ref ref="STDOUT" />
     </root>
 </configuration>

@@ -39,7 +39,7 @@ object PekkoAccountsApp {
   private implicit val transferParameters: TransferParameters =
     TransferParameters(timeout = 30.seconds)
   private implicit val askTimeout: Timeout = Timeout(30.seconds)
-  private val terminationTimeout = 30.seconds
+  private val terminationTimeout = 5.seconds
   private lazy val pekkoEventAdapter = new EventAdapter[AccountEvent, events.AccountEvent] {
     private val eventAdapter = new AccountEventAdapter
     override def toJournal(e: AccountEvent): events.AccountEvent = eventAdapter.toJournal(e)
