@@ -94,8 +94,11 @@ class StressSuiteMultiJvmNode1 extends AnyFunSuite {
             accountsCount,
             originAmount - transferAmount
           ),
-          IO.sleep(testTimeout)
+          IO.sleep(testTimeout) >> logger.info("Test timed out")
         )
+        .toResource
+      - <- logger
+        .info("Waiting just a bit more to ensure cluster is stable to allow all nodes to succeed")
         .toResource
       _ <- IO.sleep(atLeastOneNodeUpWaitingTime).toResource
       _ <- logger.info("Shutting down").toResource
@@ -124,10 +127,10 @@ object Common {
 
   val dbInitializationWaitingTime = 2.seconds
   val clusterFormationWaitingTime = 2.seconds
-  val atLeastOneNodeUpWaitingTime = 2.minutes
+  val atLeastOneNodeUpWaitingTime = 5.minutes
   val nodeRestartWaitingTime = 5.seconds
-  val minRestartDelaySeconds = 7
-  val maxRestartDelaySeconds = 15
+  val minRestartDelaySeconds = 8
+  val maxRestartDelaySeconds = 20
   val testTimeout = atLeastOneNodeUpWaitingTime + 1.minute
   val checkRetryTimeout = 5.seconds
   val accountsCount = 1000
@@ -180,34 +183,34 @@ object Common {
     _ <- IO.fromFuture(IO.blocking(SchemaUtils.createIfNotExists()))
   } yield ()
 
-  def restartingPassiveNode(httpPort: Port, arteryPort: Port): IO[Unit] = {
-    lazy val restartingNode: IO[Unit] = for {
-      logger <- Slf4jLogger.create[IO]
-      checkSuccessful <- Ref.of[IO, Boolean](false)
-      random <- Random.scalaUtilRandom[IO]
-      restartPeriod <- random
-        .betweenInt(minRestartDelaySeconds, maxRestartDelaySeconds)
-        .map(_.seconds)
-      _ <- IO.race(
-        passiveNode(httpPort, arteryPort, checkSuccessful)
-          .handleErrorWith((error: Throwable) => logger.error(error)("Node hard fail").toResource)
-          .use_,
-        IO.sleep(restartPeriod)
-      )
-      _ <- checkSuccessful.get.flatMap {
-        case true => logger.info("Balance check successful, terminating...")
-        case false =>
-          logger.info("Restarting node...") >> IO.sleep(nodeRestartWaitingTime) >> restartingNode
-      }
-    } yield ()
-    IO.race(restartingNode, IO.sleep(testTimeout))
-      .map(assertion =>
-        assert(
-          assertion.fold(_ => true, _ => false),
-          "Timed out waiting for transfers to complete as expected"
+  def restartingPassiveNode(httpPort: Port, arteryPort: Port): IO[Unit] =
+    Slf4jLogger.create[IO].flatMap { logger =>
+      lazy val restartingNode: IO[Unit] = for {
+        checkSuccessful <- Ref.of[IO, Boolean](false)
+        random <- Random.scalaUtilRandom[IO]
+        restartPeriod <- random
+          .betweenInt(minRestartDelaySeconds, maxRestartDelaySeconds)
+          .map(_.seconds)
+        _ <- IO.race(
+          passiveNode(httpPort, arteryPort, checkSuccessful)
+            .handleErrorWith((error: Throwable) => logger.error(error)("Node hard fail").toResource)
+            .use_,
+          IO.sleep(restartPeriod)
         )
-      )
-  }
+        _ <- checkSuccessful.get.flatMap {
+          case true => logger.info("Balance check successful, terminating...")
+          case false =>
+            logger.info("Restarting node...") >> IO.sleep(nodeRestartWaitingTime) >> restartingNode
+        }
+      } yield ()
+      IO.race(restartingNode, IO.sleep(testTimeout) >> logger.info("Test timed out"))
+        .map(assertion =>
+          assert(
+            assertion.fold(_ => true, _ => false),
+            "Timed out waiting for transfers to complete as expected"
+          )
+        )
+    }
 
   private def passiveNode(
       httpPort: Port,

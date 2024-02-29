@@ -34,7 +34,7 @@ val commonSettings = Seq(
 inThisBuild(
   List(
     organization := "io.github.endless4s",
-    homepage := Some(url("https://github.com/endless4s/endless")),
+    homepage := Some(url("https://github.com/endless4s/endless-transaction")),
     licenses := List("MIT License" -> url("http://opensource.org/licenses/mit-license.php")),
     developers := List(
       Developer(
@@ -46,7 +46,7 @@ inThisBuild(
     ),
     sonatypeCredentialHost := "s01.oss.sonatype.org",
     sonatypeProjectHosting := Some(
-      xerial.sbt.Sonatype.GitHubHosting("endless4s", "endless", "me@jonaschapuis.com")
+      xerial.sbt.Sonatype.GitHubHosting("endless4s", "endless-transaction", "me@jonaschapuis.com")
     ),
     Global / onChangedBuildSource := ReloadOnSourceChanges,
     PB.protocVersion := "3.17.3", // works on Apple Silicon,
@@ -105,7 +105,6 @@ lazy val example = (project in file("example"))
       (munit ++ `munit-cats-effect-3` ++ `scalacheck-effect-munit` ++ `log4cats-testing` ++ `cats-scalacheck` ++ `cats-effect-testkit` ++ scalatest ++
         Seq(postgresql, `pekko-persistence-jdbc`) ++ slick).map(_ % Test)
   )
-  .settings(scalaVersion := scala213)
   .settings(crossScalaVersions := Nil)
   .enablePlugins(MultiJvmPlugin)
   .configs(MultiJvm)

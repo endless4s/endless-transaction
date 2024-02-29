@@ -24,7 +24,8 @@ jobs:
         with:
           jvm: temurin:17
           apps: sbt
-      - run: sbt scalafmtCheckAll compile coverage +test example/multi-jvm:test coverageReport coverageAggregate versionPolicyCheck documentation/makeSite
+      - uses: catchpoint/workflow-telemetry-action@v2
+      - run: sbt scalafmtCheckAll compile coverage +test "repeat 3 example/multi-jvm:test" coverageReport coverageAggregate versionPolicyCheck documentation/makeSite
       - uses: codecov/codecov-action@v2.1.0
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
