@@ -6,7 +6,7 @@
         </encoder>
     </appender>
 
-    <logger name="endless.transaction.example.app.AccountsApp" level="WARN"/>
+    <logger name="endless.transaction.example.app.pekko.PekkoAccountsApp" level="WARN"/>
     <logger name="endless.transaction.example" level="INFO"/>
     <logger name="org.apache.pekko" level="INFO"/>
     <logger name="com.zaxxer.hikari" level="WARN"/>

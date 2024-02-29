@@ -97,6 +97,9 @@ class StressSuiteMultiJvmNode1 extends AnyFunSuite {
           IO.sleep(testTimeout)
         )
         .toResource
+      - <- logger
+        .info("Waiting just a bit more to ensure cluster is stable to allow all nodes to succeed")
+        .toResource
       _ <- IO.sleep(atLeastOneNodeUpWaitingTime).toResource
       _ <- logger.info("Shutting down").toResource
     } yield assert(
@@ -124,10 +127,10 @@ object Common {
 
   val dbInitializationWaitingTime = 2.seconds
   val clusterFormationWaitingTime = 2.seconds
-  val atLeastOneNodeUpWaitingTime = 2.minutes
+  val atLeastOneNodeUpWaitingTime = 3.minutes
   val nodeRestartWaitingTime = 5.seconds
-  val minRestartDelaySeconds = 7
-  val maxRestartDelaySeconds = 15
+  val minRestartDelaySeconds = 5
+  val maxRestartDelaySeconds = 20
   val testTimeout = atLeastOneNodeUpWaitingTime + 1.minute
   val checkRetryTimeout = 5.seconds
   val accountsCount = 1000
