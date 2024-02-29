@@ -195,7 +195,7 @@ object Common {
           passiveNode(httpPort, arteryPort, checkSuccessful)
             .handleErrorWith((error: Throwable) => logger.error(error)("Node hard fail").toResource)
             .use_,
-          IO.sleep(restartPeriod)
+          IO.sleep(restartPeriod) >> logger.info("Time elapsed, shutting down...")
         )
         _ <- checkSuccessful.get.flatMap {
           case true => logger.info("Balance check successful, terminating...")
