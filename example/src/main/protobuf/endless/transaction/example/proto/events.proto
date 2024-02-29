@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package endless.transaction.example.proto;
+
+import "endless/transaction/example/proto/model.proto";
+import "scalapb/scalapb.proto";
+
+option (scalapb.options) = {
+  // All generated classes have to be in a single file to implement a sealed trait
+  single_file: true
+  // Generate the base trait.
+  preamble: [
+    "sealed trait AccountEvent"
+  ];
+};
+
+message AccountOpened {
+  option (scalapb.message).extends = "AccountEvent";
+}
+
+message Deposited {
+  option (scalapb.message).extends = "AccountEvent";
+  uint32 amount = 1;
+}
+
+message Withdrawn {
+  option (scalapb.message).extends = "AccountEvent";
+  uint32 amount = 1;
+}
+
+message OutgoingTransferPrepared {
+  option (scalapb.message).extends = "AccountEvent";
+  TransferID transfer_id = 1 [(scalapb.field).required = true];
+  uint32 amount = 2;
+}
+
+message  IncomingTransferPrepared {
+  option (scalapb.message).extends = "AccountEvent";
+  TransferID transfer_id = 1    [(scalapb.field).required = true];
+  uint32 amount = 2;
+}
+
+message TransferCommitted {
+  option (scalapb.message).extends = "AccountEvent";
+  TransferID transfer_id = 1   [(scalapb.field).required = true];
+}
+
+message TransferAborted {
+  option (scalapb.message).extends = "AccountEvent";
+  TransferID transfer_id = 1  [(scalapb.field).required = true];
+}

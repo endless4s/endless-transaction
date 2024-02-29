@@ -1,5 +1,24 @@
 *.class
 *.log
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
+# sbt specific
+.DS_Store/
+.cache/
+.history/
+.metals/
+.lib/
+.bloop/
+.vscode/
+dist/*
+target/
+lib_managed/
+src_managed/
+project/boot/
+project/plugins/project/
+.bsp/
+.DS_Store
+
+# Scala-IDE specific
+.scala_dependencies
+.worksheet
+.idea

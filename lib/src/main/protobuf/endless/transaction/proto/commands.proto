@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package endless.transaction.proto;
+
+import "scalapb/scalapb.proto";
+import "endless/transaction/proto/model.proto";
+
+message TransactionCommand {
+  oneof command {
+    CreateCommand create = 1;
+    GetQueryCommand get_query = 2;
+    GetBranchesCommand get_branches = 3;
+    GetStatusCommand get_status = 4;
+    AbortCommand abort = 5;
+    BranchVotedCommand branch_voted = 6;
+    BranchCommittedCommand branch_committed = 7;
+    BranchAbortedCommand branch_aborted = 8;
+    BranchFailedCommand branch_failed = 9;
+    TransactionTimeoutCommand transaction_timeout = 10;
+  }
+}
+
+message CreateCommand {
+  TransactionID id = 1       [(scalapb.field).required = true];
+  bytes query = 2;
+  repeated BranchID branches = 3;
+}
+
+message GetQueryCommand {}
+
+message GetBranchesCommand {}
+
+message GetStatusCommand {}
+
+message AbortCommand {
+  bytes  reason = 1;
+}
+
+message BranchVotedCommand {
+  BranchID branch_id = 1      [(scalapb.field).required = true];
+  Vote vote = 2               [(scalapb.field).required = true];
+}
+
+message BranchCommittedCommand {
+  BranchID branch_id = 1     [(scalapb.field).required = true];
+}
+
+message BranchAbortedCommand {
+  BranchID branch_id = 1     [(scalapb.field).required = true];
+}
+
+message BranchFailedCommand {
+  BranchID branch_id = 1     [(scalapb.field).required = true];
+  string error = 2;
+}
+
+message TransactionTimeoutCommand {}
+
+

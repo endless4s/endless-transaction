@@ -1,0 +1,17 @@
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <charset>utf-8</charset>
+            <pattern>%-10d{mm:ss.SSS} %-5level %logger - %msg %X{JoinedMdc}%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="endless.transaction.example.app.AccountsApp" level="WARN"/>
+    <logger name="endless.transaction.example" level="INFO"/>
+    <logger name="org.apache.pekko" level="INFO"/>
+    <logger name="com.zaxxer.hikari" level="WARN"/>
+    <logger name="slick" level="WARN"/>
+    <root level="DEBUG">
+        <appender-ref ref="STDOUT" />
+    </root>
+</configuration>

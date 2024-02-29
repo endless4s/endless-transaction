@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package endless.transaction.proto;
+
+import "scalapb/scalapb.proto";
+import "endless/transaction/proto/model.proto";
+
+option (scalapb.options) = {
+  // All generated classes have to be in a single file to implement a sealed trait
+  single_file: true
+  // Generate the base trait.
+  preamble: [
+    "sealed trait TransactionEvent"
+  ];
+};
+
+message Created {
+  option (scalapb.message).extends = "TransactionEvent";
+  TransactionID id = 1   [(scalapb.field).required = true];
+  bytes query = 2;
+  repeated BranchID branches = 3;
+}
+
+message BranchVoted {
+  option (scalapb.message).extends = "TransactionEvent";
+  BranchID branch_ID = 1              [(scalapb.field).required = true];
+  Vote vote = 2                       [(scalapb.field).required = true];
+}
+
+message ClientAborted {
+  option (scalapb.message).extends = "TransactionEvent";
+  bytes reason = 1;
+}
+
+message BranchCommitted {
+  option (scalapb.message).extends = "TransactionEvent";
+  BranchID branch_ID = 1              [(scalapb.field).required = true];
+}
+
+message BranchAborted {
+  option (scalapb.message).extends = "TransactionEvent";
+  BranchID branch_ID = 1              [(scalapb.field).required = true];
+}
+
+message BranchFailed {
+  option (scalapb.message).extends = "TransactionEvent";
+  BranchID branch_ID = 1              [(scalapb.field).required = true];
+  string error = 2;
+}
+
+message Timeout {
+  option (scalapb.message).extends = "TransactionEvent";
+}

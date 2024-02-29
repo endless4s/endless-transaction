@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package endless.transaction.proto;
+
+import "endless/transaction/proto/model.proto";
+
+message UnitReply {}
+
+message UnknownReply {}
+
+message AlreadyExistsReply {}
+
+message CreateReply {
+  oneof reply {
+    UnitReply unit = 1;
+    AlreadyExistsReply already_exists = 2;
+  }
+}
+
+message QueryReply {
+  oneof reply {
+    bytes query = 1;
+    UnknownReply unknown = 2;
+  }
+}
+
+message BranchesReply {
+  oneof reply {
+    Branches branches = 1;
+    UnknownReply unknown = 2;
+  }
+}
+
+message StatusReply {
+  oneof reply {
+    Status status = 1;
+    UnknownReply unknown = 2;
+  }
+}
+
+message AbortReply {
+  oneof reply {
+    UnitReply unit = 1;
+    AbortError error = 2;
+  }
+}
+
