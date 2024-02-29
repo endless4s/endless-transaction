@@ -105,6 +105,8 @@ lazy val example = (project in file("example"))
       (munit ++ `munit-cats-effect-3` ++ `scalacheck-effect-munit` ++ `log4cats-testing` ++ `cats-scalacheck` ++ `cats-effect-testkit` ++ scalatest ++
         Seq(postgresql, `pekko-persistence-jdbc`) ++ slick).map(_ % Test)
   )
+  .settings(scalaVersion := scala213)
+  .settings(crossScalaVersions := Nil)
   .enablePlugins(MultiJvmPlugin)
   .configs(MultiJvm)
   .settings(run / fork := true, publish / skip := true)
