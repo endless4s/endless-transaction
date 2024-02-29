@@ -15,6 +15,7 @@ import endless.transaction.example.data.{AccountID, Transfer}
 import org.typelevel.log4cats.Logger
 import endless.transaction.example.helpers.RetryHelpers.*
 
+// #example
 class TransferBranch[F[_]: Logger](accountID: AccountID, account: Account[F])(implicit
     temporal: Temporal[F]
 ) extends Branch[F, TransferID, Transfer, TransferFailure] {
@@ -56,6 +57,7 @@ class TransferBranch[F[_]: Logger](accountID: AccountID, account: Account[F])(im
               .warn(_)(show"Error preparing incoming transfer $transferID, retrying in a bit")
           )
   }
+  // #example
 
   def commit(transferID: TransferID): F[Unit] =
     Logger[F].debug(show"Committing transfer $transferID for account $accountID") >>

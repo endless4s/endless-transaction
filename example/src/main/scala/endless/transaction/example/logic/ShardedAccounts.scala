@@ -25,6 +25,7 @@ final class ShardedAccounts[F[_]: Temporal: Logger](
 
   def accountFor(id: AccountID): Account[F] = sharding.entityFor(id)
 
+  // #transfer
   def transfer(from: AccountID, to: AccountID, amount: PosAmount): F[TransferFailure \/ Unit] =
     coordinator
       .create(TransferID.random, Transfer(from, to, amount), from, to)
@@ -46,6 +47,7 @@ final class ShardedAccounts[F[_]: Temporal: Logger](
             "Transaction failed due to branch error"
           ).raiseError[F, TransferFailure \/ Unit]
       }
+  // #transfer
 
 }
 
@@ -54,7 +56,8 @@ object ShardedAccounts {
       implicit
       transferParameters: TransferParameters,
       transactor: Transactor[F]
-  ): Resource[F, Coordinator[F, TransferID, AccountID, Transfer, TransferFailure]] =
+  ): Resource[F, Coordinator[F, TransferID, AccountID, Transfer, TransferFailure]] = {
+    // #create-coordinator
     transactor.coordinator[TransferID, AccountID, Transfer, TransferFailure](
       "transfer",
       { accountID =>
@@ -63,4 +66,6 @@ object ShardedAccounts {
       },
       Some(transferParameters.timeout)
     )
+    // #create-coordinator
+  }
 }
