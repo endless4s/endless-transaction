@@ -1,6 +1,6 @@
 # endless-transaction <img src="https://raw.githubusercontent.com/endless4s/endless-transaction/master/documentation/src/main/paradox/logo-symbol-only.svg" width="200">
 
-[![Release](https://github.com/endless4s/endless-transaction/actions/workflows/release.yml/badge.svg?branch=master)](https://github.com/endless4s/endless-transaction/actions/workflows/release.yml)
+[![Release](https://github.com/endless4s/endless-transaction/actions/workflows/release.yml/badge.svg)](https://github.com/endless4s/endless-transaction/actions/workflows/release.yml)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.endless4s/endless-transaction_2.13/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.github.endless4s/endless-transaction_2.13)
 [![codecov](https://codecov.io/gh/endless4s/endless-transaction/branch/master/graph/badge.svg?token=aH9vOhLxVS)](https://codecov.io/gh/endless4s/endless-transaction)
 [![Typelevel Affiliate Project](https://img.shields.io/badge/typelevel-affiliate%20project-FFB4B5.svg)](https://typelevel.org/projects/affiliate/)
