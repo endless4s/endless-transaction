@@ -146,8 +146,8 @@ lazy val documentation = (project in file("documentation"))
     },
     Compile / paradoxProperties ++= Map(
       "project.description" -> "endless-transaction is a Scala library that provides a functional abstraction for distributed transactions based on cats-effect and the endless library.",
-      "project.title" -> "Endless4s",
-      "project.image" -> "https://endless4s.github.io/logo-open-graph.png"
+      "project.title" -> "endless4s-transaction",
+      "project.image" -> "https://endless4s.github.io/transaction/logo-open-graph.png"
     ),
     Compile / paradoxMaterialTheme := {
       val theme = (Compile / paradoxMaterialTheme).value
