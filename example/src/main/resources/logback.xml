@@ -6,6 +6,7 @@
         </encoder>
     </appender>
 
+    <logger name="endless.transaction.example.app.akka.AkkaAccountsApp" level="WARN"/>
     <logger name="endless.transaction.example.app.pekko.PekkoAccountsApp" level="WARN"/>
     <logger name="endless.transaction.example" level="INFO"/>
     <logger name="endless.runtime.pekko.deploy" level="INFO"/>
