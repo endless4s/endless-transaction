@@ -21,14 +21,14 @@ Like for *prepare* above, this expression can involve any kind of asynchronous p
 
 Some examples of commit operations in the same imaginary touristic journey booking process:
 
-| Example: orchestration of the booking process for a journey   | Data store         | Transaction branch operation                           |
-|---------------------------------------------------------------|--------------------|--------------------------------------------------------|
-| Do nothing: reservations were already made                    | External API       | Send a message or call and endpoint of another service |
-| Do nothing: the guarantee charge was already made             | Internal service   | Send a message to another service                      |
-| Update customer details in the internal database              | Database           | Perform the row update and unlock                      |
-| Update the "recent bookings" cache and release the semaphore  | In-memory resource | Edit and unlock an in-memory resource                  |
-| Do nothing: the reminder notifications were already scheduled | Actor cluster      | Send a command to an actor                             |
-| Do nothing: the bookings log was already updated              | File               | Persist a change in a file                             |
+| Example: orchestration of the booking process for a journey   | Data store         | Transaction branch operation          |
+|---------------------------------------------------------------|--------------------|---------------------------------------|
+| Do nothing: reservations were already made                    | External API       | -                                     |
+| Do nothing: the guarantee charge was already made             | Internal service   | -                                     |
+| Update customer details in the internal database              | Database           | Perform the row update and unlock     |
+| Update the "recent bookings" cache and release the semaphore  | In-memory resource | Edit and unlock an in-memory resource |
+| Do nothing: the reminder notifications were already scheduled | Actor cluster      | -                                     |
+| Do nothing: the bookings log was already updated              | File               | -                                     |
 
 @@@ note { title="Consistency" }
 It's up to the implementer to decide the level of consistency in the execution of the commit. Transaction failure is also a valid state and can be signaled by raising an exception in the target effect. This will lead to some degree of inconsistency in the overall system state, but that can be an acceptable compromise in some use cases.
