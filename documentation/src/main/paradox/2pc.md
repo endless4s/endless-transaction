@@ -30,10 +30,11 @@ Some examples of commit operations in the same imaginary touristic journey booki
 | Do nothing: the reminder notifications were already scheduled | Actor cluster      | -                                     |
 | Do nothing: the bookings log was already updated              | File               | -                                     |
 
-@@@ note { title="Consistency" }
-It's up to the implementer to decide the level of consistency in the execution of the commit. Transaction failure is also a valid state and can be signaled by raising an exception in the target effect. This will lead to some degree of inconsistency in the overall system state, but that can be an acceptable compromise in some use cases.
+@@@ note { title="Commit consistency" }
+It's up to the implementer to decide the level of consistency in the execution of the commit. Transaction failure is also valid and can be signaled by raising an exception in the target effect. Failure will lead to inconsistency in the overall system state, which can be an acceptable
+compromise in some use cases.
 
-For instance, in our imaginary example the "in-memory cache" could be locked only for a short time to preserve throughput. Because it's not essential to the journey process, updating it could be skipped in case of delays. On the other hand, if the "internal database" update would still fail despite the lock, this could be signaled by raising an exception. This would conclude the transaction in a failed state, which could be surfaced in the UI to allow for manual remediation.
+For instance, in our imaginary example, the "in-memory cache" could be locked only briefly to preserve throughput. Because it's optional to the journey process, updating it could be skipped in case of delays. On the other hand, if the "internal database" update still fails despite the lock, the commit expression could signal this by raising an exception. The exception would conclude the transaction in a failed state, allowing surfacing in the UI for manual remediation.
 @@@
 
 ## Abort
@@ -51,7 +52,9 @@ Some examples of abort operations in the same imaginary process:
 | Cancel the reminder notifications                                           | Actor cluster      | Send a command to an actor                             |
 | Roll back the booking log entry                                             | File               | Roll back the change in a file                         |
 
-The same flexibility applies here as for the commit operation: it's up to the implementer to decide the level of consistency in the execution of the abort. In this dummy example, let's suppose traveler reminders have already been sent, a compensation action could be to schedule a new notification inviting the customer to ignore previous messages. On the other hand, failing to cancel the hotel and flight reservations would be a more serious issue and should be surfaced as a failed transaction, to elicit manual remediation.
+@@@ note { title="Abort consistency" }
+The same flexibility applies here as for the commit operation: it's up to the implementer to decide the level of consistency in the execution of the abort. In this dummy example, let's suppose traveler reminders have already been sent: a compensation action could be to schedule a new notification inviting the customer to ignore previous messages. On the other hand, failing to cancel the hotel and flight reservations would be a more serious issue and should be considered a failed transaction to elicit manual remediation.
+@@@
 
 ## State diagram
 
