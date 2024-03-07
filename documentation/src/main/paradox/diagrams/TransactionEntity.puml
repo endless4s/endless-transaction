@@ -1,5 +1,4 @@
 @startuml
-skinparam handwritten true
 skinparam defaultFontName Chalkboard
 
 title Transaction entity state diagram
@@ -12,6 +11,12 @@ Committing --> Committed : all branches confirm commit
 Aborting --> Aborted : all branches confirm abort
 
 note right of Preparing: side-effect: call prepare() on branches
-note left of Committing: side-effect: call commit() on branches
+note bottom of Committing: side-effect: call commit() on branches
 note right of Aborting: side-effect: call abort() on branches
+
+state Preparing #LightBlue
+state Committing #LightGreen
+state Aborting #LightCoral
+state Committed #Green
+state Aborted #Coral
 @enduml
