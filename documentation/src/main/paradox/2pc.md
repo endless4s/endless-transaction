@@ -58,7 +58,7 @@ The same flexibility applies here as for the commit operation: it's up to the im
 
 ## State diagram
 
-Protocol state throughout the aforementioned phases is tracked by an event-sourced entity, with events representing transitions of the state. The transaction state machine diagram is depicted below. As usual, side-effects are invoked after successful event persistence, and repeated in case of recovery (at least once delivery characteristics).
+Protocol state throughout the phases mentioned above is tracked by an event-sourced entity, with events representing state transitions. The transaction state machine diagram is depicted below. As usual, side-effects are invoked after successful event persistence and repeated in case of recovery (at least once delivery characteristics).
 
 <img src="diagrams/TransactionEntity.png"/>
 
