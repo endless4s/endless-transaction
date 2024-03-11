@@ -57,6 +57,9 @@ object ShardedAccounts {
       transferParameters: TransferParameters,
       transactor: Transactor[F]
   ): Resource[F, Coordinator[F, TransferID, AccountID, Transfer, TransferFailure]] = {
+    implicit val branchRetryParameters: TransferParameters.BranchRetryParameters =
+      transferParameters.branchRetry
+
     // #create-coordinator
     transactor.coordinator[TransferID, AccountID, Transfer, TransferFailure](
       "transfer",

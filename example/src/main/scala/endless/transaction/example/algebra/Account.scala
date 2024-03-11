@@ -3,7 +3,6 @@ package endless.transaction.example.algebra
 import endless.\/
 import endless.transaction.example.algebra.Account.{
   AlreadyExists,
-  IncomingTransferFailure,
   TransferFailure,
   Unknown,
   WithdrawFailure
@@ -16,10 +15,7 @@ trait Account[F[_]] {
   def open: F[AlreadyExists.type \/ Unit]
   def balance: F[Unknown.type \/ NonNegAmount]
   def prepareOutgoingTransfer(id: TransferID, transfer: Transfer): F[WithdrawFailure \/ Unit]
-  def prepareIncomingTransfer(
-      id: TransferID,
-      transfer: Transfer
-  ): F[IncomingTransferFailure \/ Unit]
+  def prepareIncomingTransfer(id: TransferID, transfer: Transfer): F[Unknown.type \/ Unit]
   def commitTransfer(id: TransferID): F[TransferFailure \/ Unit]
   def abortTransfer(id: TransferID): F[TransferFailure \/ Unit]
   def deposit(amount: PosAmount): F[Unknown.type \/ PosAmount]
@@ -27,16 +23,13 @@ trait Account[F[_]] {
 }
 
 object Account {
-  object Unknown extends WithdrawFailure with TransferFailure with IncomingTransferFailure {
+  object Unknown extends WithdrawFailure with TransferFailure {
     def message: String = "Account is unknown"
   }
 
   sealed trait WithdrawFailure
   final case class InsufficientFunds(missing: PosAmount) extends WithdrawFailure
   object PendingOutgoingTransfer extends WithdrawFailure
-
-  sealed trait IncomingTransferFailure
-  object PendingIncomingTransfer extends IncomingTransferFailure
 
   sealed trait TransferFailure {
     def message: String

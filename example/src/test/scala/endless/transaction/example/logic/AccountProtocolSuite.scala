@@ -99,7 +99,7 @@ class AccountProtocolSuite extends munit.ScalaCheckSuite with Generators {
           id: AccountID,
           transferID: TransferID,
           transfer: Transfer,
-          reply: Account.IncomingTransferFailure \/ Unit
+          reply: Account.Unknown.type \/ Unit
       ) =>
         implicit val sender: CommandSender[Id, AccountID] =
           CommandSender.local[Id, AccountID, Account[_[_]]](
@@ -108,7 +108,7 @@ class AccountProtocolSuite extends munit.ScalaCheckSuite with Generators {
               override def prepareIncomingTransfer(
                   id: Transfer.TransferID,
                   transfer: Transfer
-              ): Id[Account.IncomingTransferFailure \/ Unit] = reply
+              ): Id[Account.Unknown.type \/ Unit] = reply
             }
           )
         val actualReply = protocol.clientFor(id).prepareIncomingTransfer(transferID, transfer)
@@ -163,7 +163,7 @@ class AccountProtocolSuite extends munit.ScalaCheckSuite with Generators {
     def prepareIncomingTransfer(
         id: Transfer.TransferID,
         transfer: Transfer
-    ): Id[Account.IncomingTransferFailure \/ Unit] = fail("should not be called")
+    ): Id[Account.Unknown.type \/ Unit] = fail("should not be called")
 
     def commitTransfer(id: Transfer.TransferID): Id[Account.TransferFailure \/ Unit] = fail(
       "should not be called"

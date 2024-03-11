@@ -38,7 +38,6 @@ message PrepareIncomingTransferReply {
   oneof reply {
     UnitReply unit = 1;
     UnknownReply unknown = 2;
-    PendingIncomingTransfer pending_incoming_transfer = 3;
   }
 }
 

@@ -4,17 +4,7 @@ import endless.\/
 import endless.core.protocol.{CommandSender, Decoder, IncomingCommand}
 import endless.protobuf.{ProtobufCommandProtocol, ProtobufDecoder}
 import endless.transaction.example.algebra.Account
-import endless.transaction.example.algebra.Account.{
-  AlreadyExists,
-  IncomingTransferFailure,
-  InsufficientFunds,
-  PendingIncomingTransfer,
-  PendingOutgoingTransfer,
-  TransferFailure,
-  TransferUnknown,
-  Unknown,
-  WithdrawFailure
-}
+import endless.transaction.example.algebra.Account.*
 import endless.transaction.example.data.Transfer.TransferID
 import endless.transaction.example.data.{AccountID, NonNegAmount, PosAmount, Transfer}
 import endless.transaction.example.proto.commands.{
@@ -140,7 +130,7 @@ class AccountProtocol extends ProtobufCommandProtocol[AccountID, Account] {
               _
             )
           ) =>
-        handleCommand[F, replies.PrepareIncomingTransferReply, IncomingTransferFailure \/ Unit](
+        handleCommand[F, replies.PrepareIncomingTransferReply, Unknown.type \/ Unit](
           _.prepareIncomingTransfer(
             TransferID(UUID.fromString(transferID)),
             Transfer(AccountID(origin), AccountID(destination), PosAmount(amount))
@@ -149,12 +139,6 @@ class AccountProtocol extends ProtobufCommandProtocol[AccountID, Account] {
             case Left(Unknown) =>
               replies.PrepareIncomingTransferReply(
                 replies.PrepareIncomingTransferReply.Reply.Unknown(replies.UnknownReply())
-              )
-            case Left(PendingIncomingTransfer) =>
-              replies.PrepareIncomingTransferReply(
-                replies.PrepareIncomingTransferReply.Reply.PendingIncomingTransfer(
-                  model.PendingIncomingTransfer()
-                )
               )
             case Right(_) =>
               replies.PrepareIncomingTransferReply(
@@ -292,12 +276,12 @@ class AccountProtocol extends ProtobufCommandProtocol[AccountID, Account] {
       def prepareIncomingTransfer(
           transferID: TransferID,
           transfer: Transfer
-      ): F[IncomingTransferFailure \/ Unit] =
+      ): F[Unknown.type \/ Unit] =
         sendCommand[
           F,
           AccountCommand,
           replies.PrepareIncomingTransferReply,
-          IncomingTransferFailure \/ Unit
+          Unknown.type \/ Unit
         ](
           id,
           AccountCommand(
@@ -323,12 +307,6 @@ class AccountProtocol extends ProtobufCommandProtocol[AccountID, Account] {
                   _
                 ) =>
               ().asRight
-
-            case replies.PrepareIncomingTransferReply(
-                  replies.PrepareIncomingTransferReply.Reply.PendingIncomingTransfer(_),
-                  _
-                ) =>
-              PendingIncomingTransfer.asLeft
             case replies.PrepareIncomingTransferReply(
                   replies.PrepareIncomingTransferReply.Reply.Empty,
                   _

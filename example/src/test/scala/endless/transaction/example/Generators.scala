@@ -28,13 +28,28 @@ trait Generators {
 
   val transferIDGen: Gen[Transfer.TransferID] = Gen.uuid.map(Transfer.TransferID(_))
 
-  val pendingTransferGen: Gen[AccountState.PendingTransfer] = for {
+  val pendingOutgoingTransferGen: Gen[AccountState.PendingTransfer.Outgoing] = for {
     id <- transferIDGen
     amount <- posAmountGen
-    isOutgoing <- Gen.oneOf(true, false)
-  } yield
-    if (isOutgoing) AccountState.PendingTransfer.Outgoing(id, amount)
-    else AccountState.PendingTransfer.Incoming(id, amount)
+  } yield AccountState.PendingTransfer.Outgoing(id, amount)
+
+  val pendingIncomingTransferGen: Gen[AccountState.PendingTransfer.Incoming] = for {
+    id <- transferIDGen
+    amount <- posAmountGen
+  } yield AccountState.PendingTransfer.Incoming(id, amount)
+
+  val pendingSingleOutgoingTransferGen: Gen[AccountState.PendingTransfers.SingleOutgoing] =
+    pendingOutgoingTransferGen.map(AccountState.PendingTransfers.SingleOutgoing)
+
+  val pendingAtLeastOneIncomingTransferGen: Gen[AccountState.PendingTransfers.AtLeastOneIncoming] =
+    for {
+      transfers <- Gen.nonEmptyListOf(pendingIncomingTransferGen)
+    } yield AccountState.PendingTransfers.AtLeastOneIncoming(NonEmptyList.fromListUnsafe(transfers))
+
+  val pendingTransfersGen: Gen[AccountState.PendingTransfers] = Gen.oneOf(
+    pendingSingleOutgoingTransferGen,
+    pendingAtLeastOneIncomingTransferGen
+  )
 
   val accountStateWithoutPendingTransferGen: Gen[AccountState] = for {
     balance <- nonNegAmountGen
@@ -42,10 +57,24 @@ trait Generators {
 
   val accountStateWithPendingTransferGen: Gen[AccountState] = for {
     balance <- nonNegAmountGen
-    pendingTransfer <- pendingTransferGen.suchThat {
-      case AccountState.PendingTransfer.Outgoing(_, amount) => balance >= amount; case _ => true
+    pendingTransfers <- pendingTransfersGen.suchThat {
+      case AccountState.PendingTransfers.SingleOutgoing(
+            AccountState.PendingTransfer.Outgoing(_, amount)
+          ) =>
+        balance >= amount
+      case _ => true
     }
-  } yield AccountState(balance, Some(pendingTransfer))
+  } yield AccountState(balance, Some(pendingTransfers))
+
+  val accountStateWithPendingOutgoingTransferGen: Gen[AccountState] = for {
+    balance <- nonNegAmountGen
+    pendingTransfers <- pendingSingleOutgoingTransferGen.suchThat {
+      case AccountState.PendingTransfers.SingleOutgoing(
+            AccountState.PendingTransfer.Outgoing(_, amount)
+          ) =>
+        balance >= amount
+    }
+  } yield AccountState(balance, Some(pendingTransfers))
 
   val accountStateGen: Gen[AccountState] = Gen.oneOf(
     accountStateWithoutPendingTransferGen,
@@ -86,9 +115,6 @@ trait Generators {
       arbInsufficientFunds.arbitrary,
       Gen.const(Account.PendingOutgoingTransfer)
     )
-  )
-  implicit val incomingTransferFailure: Arbitrary[Account.IncomingTransferFailure] = Arbitrary(
-    Gen.oneOf(Gen.const(Account.PendingIncomingTransfer), arbUnknown.arbitrary)
   )
   implicit val arbTransferFailure: Arbitrary[Account.TransferFailure] = Arbitrary(
     Gen.oneOf(arbUnknown.arbitrary, transferIDGen.map(Account.TransferUnknown.apply))

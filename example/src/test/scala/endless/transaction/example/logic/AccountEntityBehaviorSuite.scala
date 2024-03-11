@@ -5,6 +5,7 @@ import cats.effect.IO
 import endless.core.interpret.EntityT
 import endless.transaction.example.Generators
 import endless.transaction.example.algebra.Account.*
+import endless.transaction.example.data.Transfer.TransferID
 import endless.transaction.example.data.{AccountEvent, AccountState}
 import org.scalacheck.effect.PropF.forAllF
 import org.typelevel.log4cats.Logger
@@ -17,6 +18,12 @@ class AccountEntityBehaviorSuite
   private implicit val logger: Logger[IO] = TestingLogger.impl[IO]()
   private val behavior = AccountEntityBehavior(EntityT.instance[IO, AccountState, AccountEvent])
   private implicit val eventApplier: AccountEventApplier = new AccountEventApplier
+  implicit class AccountStateOps(accountState: AccountState) {
+    def maybeTransferID: Option[TransferID] = accountState.pendingTransfers.map {
+      case AccountState.PendingTransfers.SingleOutgoing(transfer)      => transfer.id
+      case AccountState.PendingTransfers.AtLeastOneIncoming(transfers) => transfers.head.id
+    }
+  }
 
   test("open writes opened event") {
     behavior.open.run(None).map {
@@ -97,16 +104,19 @@ class AccountEntityBehaviorSuite
     }
   }
 
-  test("prepareOutgoingTransfer returns error with pending transfer") {
-    forAllF(accountStateWithPendingTransferGen, transferIDGen, transferGen) {
-      (state, id, transfer) =>
-        behavior.prepareOutgoingTransfer(id, transfer).run(Some(state)).map {
-          case Right((_, Left(PendingOutgoingTransfer))) => ()
-          case Right((_, Left(InsufficientFunds(_))))    => fail("wrong error")
-          case Right((_, Left(Unknown)))                 => fail("account should exist")
-          case Right((_, Right(_)))                      => fail("transfer should fail")
-          case Left(error)                               => fail(error)
-        }
+  test("prepareOutgoingTransfer returns error with pending outgoing transfer") {
+    forAllF(
+      accountStateWithPendingOutgoingTransferGen,
+      transferIDGen,
+      transferGen
+    ) { (state, id, transfer) =>
+      behavior.prepareOutgoingTransfer(id, transfer).run(Some(state)).map {
+        case Right((_, Left(PendingOutgoingTransfer))) => ()
+        case Right((_, Left(InsufficientFunds(_))))    => fail("wrong error")
+        case Right((_, Left(Unknown)))                 => fail("account should exist")
+        case Right((_, Right(_)))                      => fail("transfer should fail")
+        case Left(error)                               => fail(error)
+      }
     }
   }
 
@@ -127,10 +137,9 @@ class AccountEntityBehaviorSuite
   test("prepareIncomingTransfer returns error with unknown account") {
     forAllF(transferIDGen, transferGen) { (id, transfer) =>
       behavior.prepareIncomingTransfer(id, transfer).run(None).map {
-        case Right((_, Left(Unknown)))                 => ()
-        case Right((_, Left(PendingIncomingTransfer))) => fail("account should not exist")
-        case Right((_, Right(_)))                      => fail("account should not exist")
-        case Left(error)                               => fail(error)
+        case Right((_, Left(Unknown))) => ()
+        case Right((_, Right(_)))      => fail("account should not exist")
+        case Left(error)               => fail(error)
       }
     }
   }
@@ -161,18 +170,6 @@ class AccountEntityBehaviorSuite
     }
   }
 
-  test("prepareIncomingTransfer returns error with pending transfer") {
-    forAllF(accountStateWithPendingTransferGen, transferIDGen, transferGen) {
-      (state, id, transfer) =>
-        behavior.prepareIncomingTransfer(id, transfer).run(Some(state)).map {
-          case Right((_, Left(PendingIncomingTransfer))) => ()
-          case Right((_, Left(Unknown)))                 => fail("account should exist")
-          case Right((_, Right(_)))                      => fail("transfer should fail")
-          case Left(error)                               => fail(error)
-        }
-    }
-  }
-
   test("commitTransfer returns error with unknown account") {
     forAllF(transferIDGen) { id =>
       behavior.commitTransfer(id).run(None).map {
@@ -198,13 +195,13 @@ class AccountEntityBehaviorSuite
   test("commitTransfer writes transfer committed event") {
     forAllF(accountStateWithPendingTransferGen) { state =>
       behavior
-        .commitTransfer(state.pendingTransfer.get.id)
+        .commitTransfer(state.maybeTransferID.get)
         .run(Some(state))
         .map {
           case Right((events, Right(_))) =>
             assertEquals(
               events,
-              Chain(AccountEvent.TransferCommitted(state.pendingTransfer.get.id))
+              Chain(AccountEvent.TransferCommitted(state.maybeTransferID.get))
             )
           case Right((_, Left(_))) => fail("account should exist")
           case Left(error)         => fail(error)
@@ -215,9 +212,9 @@ class AccountEntityBehaviorSuite
   test("commitTransfer ignores already committed transfer") {
     forAllF(accountStateWithPendingTransferGen) { state =>
       behavior
-        .commitTransfer(state.pendingTransfer.get.id)
+        .commitTransfer(state.maybeTransferID.get)
         .run(
-          Some(state.copy(transferHistory = state.transferHistory + state.pendingTransfer.get.id))
+          Some(state.copy(transferHistory = state.transferHistory + state.maybeTransferID.get))
         )
         .map {
           case Right((_, Right(_))) => ()
@@ -252,13 +249,13 @@ class AccountEntityBehaviorSuite
   test("abortTransfer writes transfer aborted event") {
     forAllF(accountStateWithPendingTransferGen) { state =>
       behavior
-        .abortTransfer(state.pendingTransfer.get.id)
+        .abortTransfer(state.maybeTransferID.get)
         .run(Some(state))
         .map {
           case Right((events, Right(_))) =>
             assertEquals(
               events,
-              Chain(AccountEvent.TransferAborted(state.pendingTransfer.get.id))
+              Chain(AccountEvent.TransferAborted(state.maybeTransferID.get))
             )
           case Right((_, Left(_))) => fail("account should exist")
           case Left(error)         => fail(error)
@@ -269,9 +266,12 @@ class AccountEntityBehaviorSuite
   test("abortTransfer ignores already aborted transfer") {
     forAllF(accountStateWithPendingTransferGen) { state =>
       behavior
-        .abortTransfer(state.pendingTransfer.get.id)
+        .abortTransfer(state.maybeTransferID.get)
         .run(
-          Some(state.copy(transferHistory = state.transferHistory + state.pendingTransfer.get.id))
+          Some(
+            state
+              .copy(transferHistory = state.transferHistory + state.maybeTransferID.get)
+          )
         )
         .map {
           case Right((_, Right(_))) => ()
@@ -309,8 +309,11 @@ class AccountEntityBehaviorSuite
     }
   }
 
-  test("withdraw returns error with pending transfer") {
-    forAllF(accountStateWithPendingTransferGen, posAmountGen) { (state, amount) =>
+  test("withdraw returns error with pending outgoing transfer") {
+    forAllF(
+      accountStateWithPendingOutgoingTransferGen,
+      posAmountGen
+    ) { (state, amount) =>
       behavior.withdraw(amount).run(Some(state)).map {
         case Right((_, Left(PendingOutgoingTransfer))) => ()
         case Right((_, Left(InsufficientFunds(_))))    => fail("wrong error")

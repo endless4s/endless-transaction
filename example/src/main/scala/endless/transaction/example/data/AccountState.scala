@@ -1,30 +1,65 @@
 package endless.transaction.example.data
+import cats.data.NonEmptyList
 import cats.syntax.eq.*
-import endless.transaction.example.data.AccountState.PendingTransfer
+import cats.syntax.option.*
+import endless.transaction.example.data.AccountState.{PendingTransfer, PendingTransfers}
 
 final case class AccountState(
     balance: NonNegAmount,
-    pendingTransfer: Option[PendingTransfer] = None,
+    pendingTransfers: Option[PendingTransfers] = None,
     transferHistory: Set[Transfer.TransferID] = Set.empty
 ) {
+  lazy val pendingOutgoingTransfer: Option[PendingTransfer.Outgoing] = pendingTransfers.collect {
+    case PendingTransfers.SingleOutgoing(transfer) => transfer
+  }
+  lazy val pendingIncomingTransfers: List[PendingTransfer.Incoming] = pendingTransfers
+    .collect { case PendingTransfers.AtLeastOneIncoming(transfers) =>
+      transfers.toList
+    }
+    .getOrElse(List.empty)
+
+  def getPendingTransfer(id: Transfer.TransferID): Option[PendingTransfer] =
+    pendingTransfers.flatMap {
+      case PendingTransfers.SingleOutgoing(transfer) => Option.when(transfer.id === id)(transfer)
+      case PendingTransfers.AtLeastOneIncoming(transfers) => transfers.find(_.id === id)
+    }
+
   def abortTransfer(id: Transfer.TransferID): AccountState = {
     if (transferHistory.contains(id)) this
     else {
-      require(pendingTransfer.exists(_.id === id), "Transfer is unknown")
-      copy(pendingTransfer = None, transferHistory = transferHistory + id)
+      require(getPendingTransfer(id).nonEmpty, "Transfer is unknown")
+      copy(
+        pendingTransfers = pendingTransfers match {
+          case Some(PendingTransfers.SingleOutgoing(_)) => None
+          case Some(PendingTransfers.AtLeastOneIncoming(transfers)) =>
+            NonEmptyList
+              .fromList(transfers.filterNot(_.id === id))
+              .map(PendingTransfers.AtLeastOneIncoming)
+          case None => None
+        },
+        transferHistory = transferHistory + id
+      )
     }
   }
 
   def commitTransfer(id: Transfer.TransferID): AccountState = {
     if (transferHistory.contains(id)) this
     else {
-      require(pendingTransfer.exists(_.id === id), "Transfer is unknown")
+      require(getPendingTransfer(id).nonEmpty, "Transfer is unknown")
       copy(
-        pendingTransfer = None,
-        balance = pendingTransfer match {
-          case Some(PendingTransfer.Incoming(`id`, amount)) => balance + amount
-          case Some(PendingTransfer.Outgoing(`id`, amount)) => balance - amount
-          case _                                            => balance
+        pendingTransfers = pendingTransfers match {
+          case Some(PendingTransfers.SingleOutgoing(_)) => None
+          case Some(PendingTransfers.AtLeastOneIncoming(transfers)) =>
+            NonEmptyList
+              .fromList(transfers.filterNot(_.id === id))
+              .map(PendingTransfers.AtLeastOneIncoming)
+          case None => None
+        },
+        balance = pendingTransfers match {
+          case Some(PendingTransfers.SingleOutgoing(transfer)) => balance - transfer.amount
+          case Some(PendingTransfers.AtLeastOneIncoming(transfers)) =>
+            transfers.find(_.id === id).map(_.amount).fold(balance)(balance + _)
+          case _ => balance
         },
         transferHistory = transferHistory + id
       )
@@ -35,19 +70,43 @@ final case class AccountState(
     if (transferHistory.contains(id)) this
     else {
       require(balance >= amount, "Not enough funds")
-      copy(pendingTransfer = Some(PendingTransfer.Outgoing(id, amount)))
+      copy(pendingTransfers =
+        PendingTransfers.SingleOutgoing(PendingTransfer.Outgoing(id, amount)).some
+      )
     }
   }
 
   def prepareIncomingTransfer(id: Transfer.TransferID, amount: PosAmount): AccountState =
     if (transferHistory.contains(id)) this
-    else copy(pendingTransfer = Some(PendingTransfer.Incoming(id, amount)))
+    else
+      copy(pendingTransfers = pendingTransfers match {
+        case Some(PendingTransfers.SingleOutgoing(_)) => pendingTransfers
+        case Some(PendingTransfers.AtLeastOneIncoming(transfers)) =>
+          PendingTransfers
+            .AtLeastOneIncoming(transfers :+ PendingTransfer.Incoming(id, amount))
+            .some
+        case None =>
+          PendingTransfers
+            .AtLeastOneIncoming(NonEmptyList.one(PendingTransfer.Incoming(id, amount)))
+            .some
+      })
 
   def deposit(amount: PosAmount): AccountState = copy(balance = balance + amount)
   def withdraw(amount: PosAmount): AccountState = copy(balance = balance - amount)
 }
 
 object AccountState {
+  sealed trait PendingTransfers
+  object PendingTransfers {
+    final case class AtLeastOneIncoming(transfers: NonEmptyList[PendingTransfer.Incoming])
+        extends PendingTransfers {
+      lazy val ids: Set[Transfer.TransferID] = transfers.map(_.id).toList.toSet
+    }
+    final case class SingleOutgoing(transfer: PendingTransfer.Outgoing) extends PendingTransfers {
+      lazy val ids: Set[Transfer.TransferID] = Set(transfer.id)
+    }
+  }
+
   sealed trait PendingTransfer {
     def id: Transfer.TransferID
     def amount: PosAmount
