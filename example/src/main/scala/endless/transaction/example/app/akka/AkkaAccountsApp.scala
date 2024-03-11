@@ -25,6 +25,7 @@ import endless.transaction.akka.AkkaTransactor
 import akka.actor.typed.ActorSystem
 import akka.persistence.typed.{EventAdapter, EventSeq}
 import akka.util.Timeout
+import endless.transaction.example.helpers.RetryHelpers.RetryParameters
 import org.http4s.server.Server
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 
@@ -37,9 +38,15 @@ object AkkaAccountsApp {
   private implicit val eventApplier: AccountEventApplier = new AccountEventApplier
   private implicit val commandProtocol: AccountProtocol = new AccountProtocol
   private implicit val transferParameters: TransferParameters =
-    TransferParameters(timeout = 30.seconds)
+    TransferParameters(
+      timeout = 30.seconds,
+      TransferParameters.BranchRetryParameters(
+        onError = RetryParameters(1.second, 5),
+        onPendingTransfer = RetryParameters(200.millis, 5)
+      )
+    )
   private implicit val askTimeout: Timeout = Timeout(30.seconds)
-  private val terminationTimeout = 30.seconds
+  private val terminationTimeout = 5.seconds
   private lazy val pekkoEventAdapter = new EventAdapter[AccountEvent, events.AccountEvent] {
     private val eventAdapter = new AccountEventAdapter
     override def toJournal(e: AccountEvent): events.AccountEvent = eventAdapter.toJournal(e)

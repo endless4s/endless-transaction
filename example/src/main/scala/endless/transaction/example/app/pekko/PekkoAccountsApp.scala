@@ -14,6 +14,7 @@ import endless.transaction.example.adapter.AccountEventAdapter
 import endless.transaction.example.algebra.{Account, Accounts}
 import endless.transaction.example.app.HttpServer
 import endless.transaction.example.data.{AccountEvent, AccountID, AccountState, TransferParameters}
+import endless.transaction.example.helpers.RetryHelpers.RetryParameters
 import endless.transaction.example.logic.{
   AccountEntityBehavior,
   AccountEventApplier,
@@ -37,7 +38,13 @@ object PekkoAccountsApp {
   private implicit val eventApplier: AccountEventApplier = new AccountEventApplier
   private implicit val commandProtocol: AccountProtocol = new AccountProtocol
   private implicit val transferParameters: TransferParameters =
-    TransferParameters(timeout = 30.seconds)
+    TransferParameters(
+      timeout = 30.seconds,
+      TransferParameters.BranchRetryParameters(
+        onError = RetryParameters(1.second, 5),
+        onPendingTransfer = RetryParameters(200.millis, 5)
+      )
+    )
   private implicit val askTimeout: Timeout = Timeout(30.seconds)
   private val terminationTimeout = 5.seconds
   private lazy val pekkoEventAdapter = new EventAdapter[AccountEvent, events.AccountEvent] {
