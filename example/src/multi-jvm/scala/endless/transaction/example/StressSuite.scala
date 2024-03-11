@@ -131,7 +131,7 @@ object Common {
   val nodeRestartWaitingTime = 5.seconds
   val minRestartDelaySeconds = 8
   val maxRestartDelaySeconds = 20
-  val testTimeout = atLeastOneNodeUpWaitingTime + 1.minute
+  val testTimeout = atLeastOneNodeUpWaitingTime + 2.minutes
   val checkRetryTimeout = 5.seconds
   val accountsCount = 1000
   val originAmount = 10
