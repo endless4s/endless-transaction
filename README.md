@@ -8,4 +8,4 @@
 
 `endless-transaction` is a Scala library that provides a functional abstraction for distributed transactions based on cats-effect and the endless library. It is designed to simplify the process of coordinating transactions using the two-phase commit protocol. Transactions are implemented with persistent entities using event-sourcing, making the system resilient to failures.
 
-Head to the [documentation](https://endless4s.github.io/transaction/index.html) to learn more.
+Head to the [documentation](https://endless4s.github.io/transaction/index.html) to learn more, or to the [blog article](https://jonas-chapuis.medium.com/two-phase-consensus-with-functional-scala-5dc29388ac5a) for a more "story-like" walk-through.
