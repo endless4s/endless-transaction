@@ -59,7 +59,7 @@ inThisBuild(
 )
 
 lazy val lib = (project in file("lib"))
-  .settings(commonSettings*)
+  .settings(commonSettings *)
   .settings(name := "endless-transaction")
   .settings(
     Compile / PB.targets := Seq(
@@ -78,18 +78,18 @@ lazy val lib = (project in file("lib"))
 
 lazy val pekkoRuntime = (project in file("pekko"))
   .dependsOn(lib)
-  .settings(commonSettings*)
+  .settings(commonSettings *)
   .settings(libraryDependencies ++= Seq(`endless-runtime-pekko`) ++ pekkoProvided)
   .settings(name := "endless-transaction-pekko")
 
 lazy val akkaRuntime = (project in file("akka"))
   .dependsOn(lib)
-  .settings(commonSettings*)
+  .settings(commonSettings *)
   .settings(libraryDependencies ++= Seq(`endless-runtime-akka`) ++ akkaProvided)
   .settings(name := "endless-transaction-akka")
 
 lazy val example = (project in file("example"))
-  .settings(commonSettings*)
+  .settings(commonSettings *)
   .dependsOn(lib % "test->test;compile->compile", pekkoRuntime, akkaRuntime)
   .settings(
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
@@ -167,7 +167,7 @@ lazy val root = project
   .in(file("."))
   .dependsOn(example)
   .aggregate(lib, pekkoRuntime, akkaRuntime, example, documentation)
-  .settings(commonSettings*)
+  .settings(commonSettings *)
   .settings(crossScalaVersions := Nil)
   .settings(publish / skip := true)
   .settings(Compile / run / fork := true)
