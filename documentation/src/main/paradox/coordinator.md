@@ -5,9 +5,8 @@ trait Coordinator[F[_], TID, BID, Q, R]
   def create(
       id: TID,
       query: Q,
-      branch1: BID,
-      branch2: BID,
-      others: BID*
+      branch: BID,
+      otherBranches: BID*
   ): Resource[F, Transaction[F, BID, Q, R]]
 ```
 

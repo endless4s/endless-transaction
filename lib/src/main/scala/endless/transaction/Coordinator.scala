@@ -30,11 +30,9 @@ trait Coordinator[F[_], TID, BID, Q, R] {
     *   the transaction id
     * @param query
     *   the query to be executed (transaction payload)
-    * @param branch1
+    * @param branch
     *   the first branch
-    * @param branch2
-    *   the second branch
-    * @param others
+    * @param otherBranches
     *   the remaining branches
     * @return
     *   handle to the transaction
@@ -42,9 +40,8 @@ trait Coordinator[F[_], TID, BID, Q, R] {
   def create(
       id: TID,
       query: Q,
-      branch1: BID,
-      branch2: BID,
-      others: BID*
+      branch: BID,
+      otherBranches: BID*
   ): Resource[F, Transaction[F, BID, Q, R]]
 
   /** Recovers a transaction with the given id. Can be used by recovering clients who lost the
