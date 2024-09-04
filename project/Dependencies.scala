@@ -77,7 +77,7 @@ object Dependencies {
   lazy val `log4cats-testing` = Seq("org.typelevel" %% "log4cats-testing" % log4catsVersion)
 
   lazy val munit =
-    Seq("org.scalameta" %% "munit", "org.scalameta" %% "munit-scalacheck").map(_ % "0.7.29")
+    Seq("org.scalameta" %% "munit", "org.scalameta" %% "munit-scalacheck").map(_ % "1.0.0")
 
   lazy val scalatest = Seq("org.scalatest" %% "scalatest" % "3.2.15")
 
