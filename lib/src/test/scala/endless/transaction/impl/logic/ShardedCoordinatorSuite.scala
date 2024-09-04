@@ -116,7 +116,7 @@ class ShardedCoordinatorSuite
         }
       val coordinator = new ShardedCoordinator(sharding)
       coordinator
-        .create(tid, query, branches.head, branches.head, branches.tail*)
+        .create(tid, query, branches.head, branches.tail*)
         .use_ >> logger.assertLogsDebug
     }
   }
@@ -141,7 +141,7 @@ class ShardedCoordinatorSuite
       val coordinator = new ShardedCoordinator(sharding)
       interceptIO[Coordinator.TransactionAlreadyExists.type](
         coordinator
-          .create(tid, query, branches.head, branches.head, branches.tail*)
+          .create(tid, query, branches.head, branches.tail*)
           .use_
       ) >> logger.assertLogsDebug >> logger.assertLogsWarn
     }

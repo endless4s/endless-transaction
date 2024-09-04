@@ -89,9 +89,8 @@ class ShardedAccountsSuite
       def create(
           id: TransferID,
           query: Transfer,
-          branch1: AccountID,
-          branch2: AccountID,
-          others: AccountID*
+          branch: AccountID,
+          otherBranches: AccountID*
       ): Resource[IO, Transaction[IO, AccountID, Transfer, TransferFailure]] =
         Resource.pure(new Transaction[IO, AccountID, Transfer, TransferFailure] {
           def query: IO[Transaction.Unknown.type \/ Transfer] = fail("should not be called")
