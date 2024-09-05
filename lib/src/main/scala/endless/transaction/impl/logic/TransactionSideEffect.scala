@@ -59,7 +59,7 @@ private[transaction] final class TransactionSideEffect[
           .filterNot(preparing.hasBranchAlreadyVoted)
           .map(zipWithBranch)
           .toList
-          .parTraverse((prepareBranch(preparing) _).tupled)
+          .parTraverse(prepareBranch(preparing).tupled)
           .void
 
       case committing: Committing[TID, BID, Q, R] if (trigger match {
@@ -72,7 +72,7 @@ private[transaction] final class TransactionSideEffect[
           .filterNot(committing.hasBranchAlreadyCommitted)
           .map(zipWithBranch)
           .toList
-          .parTraverse((commitBranch(committing) _).tupled)
+          .parTraverse(commitBranch(committing).tupled)
           .void
 
       case aborting: Aborting[TID, BID, Q, R] if (trigger match {
@@ -85,7 +85,7 @@ private[transaction] final class TransactionSideEffect[
           .filterNot(aborting.hasBranchAlreadyAborted)
           .map(zipWithBranch)
           .toList
-          .parTraverse((abortBranch(aborting) _).tupled)
+          .parTraverse(abortBranch(aborting).tupled)
           .void
 
       case _ => ().pure
