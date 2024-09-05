@@ -7,7 +7,7 @@ import com.comcast.ip4s.*
 import com.typesafe.config.ConfigFactory
 import endless.transaction.example.Generators
 import endless.transaction.example.data.{AccountID, PosAmount}
-import munit.ScalaCheckEffectSuite
+import munit.{AnyFixture, ScalaCheckEffectSuite}
 import akka.actor.typed.ActorSystem
 import akka.persistence.testkit.{
   PersistenceTestKitDurableStateStorePlugin,
@@ -54,7 +54,7 @@ class AkkaAccountsAppSuite
   implicit private lazy val segmentEncoder: SegmentEncoder[AccountID] =
     SegmentEncoder[String].contramap(_.value)
 
-  override def munitTimeout: Duration = 1.minute
+  override val munitIOTimeout: Duration = 1.minute
 
   test("transferring from one account to another") {
     forAllF(for {
@@ -88,5 +88,5 @@ class AkkaAccountsAppSuite
         } yield ()
     }
   }
-  override def munitFixtures: Seq[Fixture[?]] = List(akkaServer, client)
+  override def munitFixtures: Seq[AnyFixture[?]] = List(akkaServer, client)
 }

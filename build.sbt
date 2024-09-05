@@ -21,7 +21,7 @@ val commonSettings = Seq(
       Seq(compilerPlugin("org.typelevel" % "kind-projector" % "0.13.3" cross CrossVersion.full))
     case _ => Nil
   }),
-  Compile / scalacOptions ++= Seq("-Xfatal-warnings"),
+  Compile / scalacOptions ++= Seq("-Xfatal-warnings", "-unchecked", "-deprecation"),
   Compile / scalacOptions ++= (CrossVersion.partialVersion(scalaVersion.value) match {
     case Some((3, _)) => Seq("-Ykind-projector:underscores")
     case Some((2, _)) =>
@@ -98,11 +98,12 @@ lazy val example = (project in file("example"))
   .settings(
     libraryDependencies ++= Seq(
       `endless-core`,
-      `logback-classic`,
       `scalapb-runtime`
-    ) ++ pekko ++ pekkoTest ++ akka ++ akkaTest ++ http4s ++ `log4cats-core` ++ `log4cats-slf4j` ++
-      (munit ++ `munit-cats-effect-3` ++ `scalacheck-effect-munit` ++ `log4cats-testing` ++ `cats-scalacheck` ++ `cats-effect-testkit` ++ scalatest ++
-        Seq(postgresql, `pekko-persistence-jdbc`) ++ slick).map(_ % Test)
+    ) ++ pekko ++ pekkoTest ++ akka ++ akkaTest ++ http4s ++ `log4cats-core` ++ `log4cats-slf4j` ++ `logback-classic` ++
+      (munit ++ `munit-cats-effect-3` ++ `scalacheck-effect-munit` ++ `log4cats-testing` ++ `cats-scalacheck` ++ `cats-effect-testkit` ++ scalatest ++ Seq(
+        postgresql,
+        `pekko-persistence-jdbc`
+      ) ++ slick).map(_ % Test)
   )
   .settings(crossScalaVersions := Nil)
   .enablePlugins(MultiJvmPlugin)
@@ -133,8 +134,8 @@ lazy val documentation = (project in file("documentation"))
       }.toMap
     ),
     paradoxProperties ++= List(
-      ("akka.min.version" -> akkaVersion),
-      ("pekko.min.version" -> pekkoVersion)
+      "akka.min.version" -> akkaVersion,
+      "pekko.min.version" -> pekkoVersion
     ).toMap,
     scaladocSiteProjects.flatMap { case (project, (conf, _, path)) =>
       SiteScaladocPlugin.scaladocSettings(

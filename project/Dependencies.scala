@@ -11,7 +11,7 @@ object Dependencies {
   val `scalapb-runtime` =
     "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf"
 
-  val http4sVersion = "0.23.24"
+  val http4sVersion = "0.23.27"
   val http4s = Seq(
     "org.http4s" %% "http4s-ember-server" % http4sVersion,
     "org.http4s" %% "http4s-ember-client" % http4sVersion % Test,
@@ -28,15 +28,12 @@ object Dependencies {
   lazy val `pekko-actor-testkit-typed` = "org.apache.pekko" %% "pekko-actor-testkit-typed"
   lazy val `pekko-persistence-testkit` = "org.apache.pekko" %% "pekko-persistence-testkit"
 
-  lazy val pekko =
-    Seq(
-      `pekko-actor-typed`,
-      `pekko-cluster-typed`,
-      `pekko-cluster-sharding-typed`,
-      `pekko-persistence-typed`
-    ).map(
-      _ % pekkoVersion
-    )
+  lazy val pekko = Seq(
+    `pekko-actor-typed`,
+    `pekko-cluster-typed`,
+    `pekko-cluster-sharding-typed`,
+    `pekko-persistence-typed`
+  ).map(_ % pekkoVersion)
   lazy val pekkoProvided = pekko.map(_ % Provided)
   lazy val pekkoTest =
     Seq(`pekko-actor-testkit-typed`, `pekko-persistence-testkit`).map(_ % pekkoVersion)
@@ -60,7 +57,7 @@ object Dependencies {
   lazy val akkaTest =
     Seq(`akka-actor-testkit-typed`, `akka-persistence-testkit`).map(_ % akkaVersion)
 
-  lazy val postgresql = "org.postgresql" % "postgresql" % "42.7.1"
+  lazy val postgresql = "org.postgresql" % "postgresql" % "42.7.3"
   lazy val `pekko-persistence-jdbc` =
     ("org.apache.pekko" %% "pekko-persistence-jdbc" % "1.0.0").excludeAll("org.apache.pekko")
   lazy val slickVersion = "3.3.3"
@@ -69,26 +66,30 @@ object Dependencies {
     "com.typesafe.slick" %% "slick-hikaricp" % slickVersion
   )
 
-  lazy val `logback-classic` = "ch.qos.logback" % "logback-classic" % "1.4.14"
+  lazy val logbackVersion = "1.5.7"
+  lazy val `logback-classic` = Seq("ch.qos.logback" % "logback-classic" % logbackVersion)
 
   lazy val log4catsVersion = "2.7.0"
   lazy val `log4cats-core` = Seq("org.typelevel" %% "log4cats-core" % log4catsVersion)
   lazy val `log4cats-slf4j` = Seq("org.typelevel" %% "log4cats-slf4j" % log4catsVersion)
   lazy val `log4cats-testing` = Seq("org.typelevel" %% "log4cats-testing" % log4catsVersion)
 
+  lazy val munitVersion = "1.0.0"
   lazy val munit =
-    Seq("org.scalameta" %% "munit", "org.scalameta" %% "munit-scalacheck").map(_ % "0.7.29")
+    Seq("org.scalameta" %% "munit", "org.scalameta" %% "munit-scalacheck").map(_ % munitVersion)
 
-  lazy val scalatest = Seq("org.scalatest" %% "scalatest" % "3.2.15")
+  lazy val scalatest = Seq("org.scalatest" %% "scalatest" % "3.2.19") // for multi-jvm tests
 
-  lazy val `munit-cats-effect-3` = Seq("org.typelevel" %% "munit-cats-effect-3" % "1.0.7")
+  lazy val `munit-cats-effect-3` = Seq("org.typelevel" %% "munit-cats-effect" % "2.0.0")
 
   lazy val catsEffectVersion = "3.5.4"
   lazy val `cats-effect` = "org.typelevel" %% "cats-effect" % catsEffectVersion
 
   lazy val `cats-effect-testkit` = Seq("org.typelevel" %% "cats-effect-testkit" % catsEffectVersion)
 
-  lazy val `scalacheck-effect-munit` = Seq("org.typelevel" %% "scalacheck-effect-munit" % "1.0.4")
+  lazy val `scalacheck-effect-munit` = Seq(
+    "org.typelevel" %% "scalacheck-effect-munit" % "2.0.0-M2"
+  )
 
   lazy val `cats-scalacheck` = Seq("io.chrisdavenport" %% "cats-scalacheck" % "0.3.2")
 }
