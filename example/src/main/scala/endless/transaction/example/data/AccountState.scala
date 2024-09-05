@@ -34,7 +34,7 @@ final case class AccountState(
           case Some(PendingTransfers.AtLeastOneIncoming(transfers)) =>
             NonEmptyList
               .fromList(transfers.filterNot(_.id === id))
-              .map(PendingTransfers.AtLeastOneIncoming)
+              .map(PendingTransfers.AtLeastOneIncoming.apply)
           case None => None
         },
         transferHistory = transferHistory + id
@@ -52,7 +52,7 @@ final case class AccountState(
           case Some(PendingTransfers.AtLeastOneIncoming(transfers)) =>
             NonEmptyList
               .fromList(transfers.filterNot(_.id === id))
-              .map(PendingTransfers.AtLeastOneIncoming)
+              .map(PendingTransfers.AtLeastOneIncoming.apply)
           case None => None
         },
         balance = pendingTransfers match {

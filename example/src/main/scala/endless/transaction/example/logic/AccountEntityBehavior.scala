@@ -6,7 +6,6 @@ import cats.syntax.eq.*
 import cats.syntax.show.*
 import cats.syntax.functor.*
 import cats.syntax.flatMap.*
-import cats.conversions.all.*
 import endless.\/
 import endless.core.entity.Entity
 import endless.transaction.example.algebra.Account
