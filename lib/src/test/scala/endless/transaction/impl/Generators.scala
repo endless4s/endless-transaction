@@ -144,12 +144,12 @@ trait Generators {
   val transactionEventGen: Gen[TransactionEvent[TID, BID, Q, R]] = Gen.oneOf(
     Gen
       .zip(tidGen, qGen, Gen.nonEmptyListOf(bidGen).map(NonEmptyList.fromListUnsafe))
-      .map((TransactionEvent.Created.apply[TID, BID, Q] _).tupled),
-    Gen.zip(bidGen, voteGen).map((TransactionEvent.BranchVoted.apply[BID, R] _).tupled),
+      .map(TransactionEvent.Created.apply[TID, BID, Q].tupled),
+    Gen.zip(bidGen, voteGen).map(TransactionEvent.BranchVoted.apply[BID, R].tupled),
     Gen.option(rGen).map(TransactionEvent.ClientAborted(_)),
     bidGen.map(TransactionEvent.BranchCommitted(_)),
     bidGen.map(TransactionEvent.BranchAborted(_)),
-    Gen.zip(bidGen, Gen.alphaNumStr).map((TransactionEvent.BranchFailed.apply[BID] _).tupled),
+    Gen.zip(bidGen, Gen.alphaNumStr).map(TransactionEvent.BranchFailed.apply[BID].tupled),
     Gen.const(TransactionEvent.Timeout)
   )
 
