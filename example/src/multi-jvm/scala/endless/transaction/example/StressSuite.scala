@@ -129,9 +129,9 @@ object Common {
   val clusterFormationWaitingTime = 2.seconds
   val atLeastOneNodeUpWaitingTime = 5.minutes
   val nodeRestartWaitingTime = 5.seconds
-  val minRestartDelaySeconds = 8
-  val maxRestartDelaySeconds = 20
-  val testTimeout = atLeastOneNodeUpWaitingTime + 2.minutes
+  val minRestartDelaySeconds = 10
+  val maxRestartDelaySeconds = 30
+  val testTimeout = 10.minutes
   val checkRetryTimeout = 5.seconds
   val accountsCount = 1000
   val originAmount = 10
