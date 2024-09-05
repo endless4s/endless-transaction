@@ -7,7 +7,7 @@ import com.comcast.ip4s.*
 import com.typesafe.config.ConfigFactory
 import endless.transaction.example.Generators
 import endless.transaction.example.data.{AccountID, PosAmount}
-import munit.ScalaCheckEffectSuite
+import munit.{AnyFixture, ScalaCheckEffectSuite}
 import org.apache.pekko.actor.typed.ActorSystem
 import org.apache.pekko.persistence.testkit.{
   PersistenceTestKitDurableStateStorePlugin,
@@ -54,7 +54,7 @@ class PekkoAccountsAppSuite
   implicit private lazy val segmentEncoder: SegmentEncoder[AccountID] =
     SegmentEncoder[String].contramap(_.value)
 
-  override def munitTimeout: Duration = 1.minute
+  override val munitIOTimeout: Duration = 1.minute
 
   test("depositing/withdrawing to/from account increases/decreases balance") {
     forAllF { (id: AccountID, amount: PosAmount) =>
@@ -153,5 +153,5 @@ class PekkoAccountsAppSuite
     } yield assertEquals(status.code, 400)
   }
 
-  override def munitFixtures: Seq[Fixture[?]] = List(pekkoServer, client)
+  override def munitFixtures: Seq[AnyFixture[?]] = List(pekkoServer, client)
 }
