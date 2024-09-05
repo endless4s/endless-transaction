@@ -41,13 +41,14 @@ private[transaction] final class ShardedCoordinator[F[_]: Logger, TID, BID, Q, R
       branch: BID,
       otherBranches: BID*
   ): Resource[F, Transaction[F, BID, Q, R]] =
-    Resource.eval(
-      Logger[F].debug(show"Creating transaction $id") >>
-        sharding
-          .entityFor(id)
-          .create(id, query, NonEmptyList.of[BID](branch, otherBranches*))
-    )
-      >>= {
+    Resource
+      .eval(
+        Logger[F].debug(show"Creating transaction $id") >>
+          sharding
+            .entityFor(id)
+            .create(id, query, NonEmptyList.of[BID](branch, otherBranches*))
+      )
+      .flatMap {
         case Right(_) =>
           Resource.eval(
             Logger[F].debug(show"Transaction transaction $id successfully created")

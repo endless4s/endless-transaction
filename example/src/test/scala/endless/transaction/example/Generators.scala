@@ -39,7 +39,7 @@ trait Generators {
   } yield AccountState.PendingTransfer.Incoming(id, amount)
 
   val pendingSingleOutgoingTransferGen: Gen[AccountState.PendingTransfers.SingleOutgoing] =
-    pendingOutgoingTransferGen.map(AccountState.PendingTransfers.SingleOutgoing)
+    pendingOutgoingTransferGen.map(AccountState.PendingTransfers.SingleOutgoing.apply)
 
   val pendingAtLeastOneIncomingTransferGen: Gen[AccountState.PendingTransfers.AtLeastOneIncoming] =
     for {

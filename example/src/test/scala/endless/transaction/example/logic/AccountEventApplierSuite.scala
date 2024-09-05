@@ -104,7 +104,7 @@ class AccountEventApplierSuite extends munit.ScalaCheckSuite with Generators {
               case PendingTransfers.AtLeastOneIncoming(transfers) =>
                 NonEmptyList
                   .fromList(transfers.filterNot(_.id === pendingTransfer.id))
-                  .map(PendingTransfers.AtLeastOneIncoming)
+                  .map(PendingTransfers.AtLeastOneIncoming.apply)
             },
             transferHistory = Set(pendingTransfer.id)
           )
@@ -126,7 +126,7 @@ class AccountEventApplierSuite extends munit.ScalaCheckSuite with Generators {
         case PendingTransfers.AtLeastOneIncoming(transfers) =>
           NonEmptyList
             .fromList(transfers.filterNot(_.id === pendingTransfer.id))
-            .map(PendingTransfers.AtLeastOneIncoming)
+            .map(PendingTransfers.AtLeastOneIncoming.apply)
         case PendingTransfers.SingleOutgoing(_) => None
       }
       applier.apply(Some(state), AccountEvent.TransferAborted(pendingTransfer.id)) == Right(
