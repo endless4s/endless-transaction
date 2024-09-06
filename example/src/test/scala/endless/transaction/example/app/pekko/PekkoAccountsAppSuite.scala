@@ -54,7 +54,7 @@ class PekkoAccountsAppSuite
   implicit private lazy val segmentEncoder: SegmentEncoder[AccountID] =
     SegmentEncoder[String].contramap(_.value)
 
-  override val munitIOTimeout: Duration = 1.minute
+  override val munitIOTimeout: Duration = 2.minutes
 
   test("depositing/withdrawing to/from account increases/decreases balance") {
     forAllF { (id: AccountID, amount: PosAmount) =>

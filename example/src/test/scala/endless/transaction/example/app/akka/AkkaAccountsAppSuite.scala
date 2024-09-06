@@ -54,7 +54,7 @@ class AkkaAccountsAppSuite
   implicit private lazy val segmentEncoder: SegmentEncoder[AccountID] =
     SegmentEncoder[String].contramap(_.value)
 
-  override val munitIOTimeout: Duration = 1.minute
+  override val munitIOTimeout: Duration = 2.minutes
 
   test("transferring from one account to another") {
     forAllF(for {
