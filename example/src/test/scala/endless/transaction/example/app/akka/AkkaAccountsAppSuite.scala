@@ -1,5 +1,7 @@
 package endless.transaction.example.app.akka
 
+import akka.actor.typed.ActorSystem
+import akka.persistence.testkit.PersistenceTestKitPlugin
 import cats.effect.IO
 import cats.syntax.flatMap.*
 import cats.syntax.show.*
@@ -37,7 +39,6 @@ class AkkaAccountsAppSuite
               name = "example-akka-as",
               config = Some(
                 PersistenceTestKitPlugin.config
-                  .withFallback(PersistenceTestKitDurableStateStorePlugin.config)
                   .withFallback(ConfigFactory.defaultApplication)
                   .resolve()
               ),

@@ -96,6 +96,9 @@ final case class AccountState(
 }
 
 object AccountState {
+  @SuppressWarnings(Array("org.wartremover.warts.Equals", "org.wartremover.warts.FinalVal"))
+  implicit val show: cats.Show[AccountState] = cats.derived.semiauto.showPretty
+
   sealed trait PendingTransfers
   object PendingTransfers {
     final case class AtLeastOneIncoming(transfers: NonEmptyList[PendingTransfer.Incoming])

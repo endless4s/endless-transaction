@@ -34,7 +34,7 @@ message OutgoingTransferPrepared {
   uint32 amount = 2;
 }
 
-message  IncomingTransferPrepared {
+message IncomingTransferPrepared {
   option (scalapb.message).extends = "AccountEvent";
   TransferID transfer_id = 1    [(scalapb.field).required = true];
   uint32 amount = 2;

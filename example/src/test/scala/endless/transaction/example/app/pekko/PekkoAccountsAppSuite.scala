@@ -9,15 +9,12 @@ import endless.transaction.example.Generators
 import endless.transaction.example.data.{AccountID, PosAmount}
 import munit.{AnyFixture, ScalaCheckEffectSuite}
 import org.apache.pekko.actor.typed.ActorSystem
-import org.apache.pekko.persistence.testkit.{
-  PersistenceTestKitDurableStateStorePlugin,
-  PersistenceTestKitPlugin
-}
+import org.apache.pekko.persistence.testkit.PersistenceTestKitPlugin
 import org.http4s.Method.*
-import org.http4s.Uri
 import org.http4s.Uri.Path.SegmentEncoder
 import org.http4s.client.dsl.io.*
 import org.http4s.ember.client.EmberClientBuilder
+import org.http4s.{Status, Uri}
 import org.scalacheck.effect.PropF.forAllF
 
 import scala.concurrent.duration.*
@@ -37,7 +34,6 @@ class PekkoAccountsAppSuite
               name = "example-pekko-as",
               config = Some(
                 PersistenceTestKitPlugin.config
-                  .withFallback(PersistenceTestKitDurableStateStorePlugin.config)
                   .withFallback(ConfigFactory.defaultApplication)
                   .resolve()
               ),
@@ -81,9 +77,13 @@ class PekkoAccountsAppSuite
         for {
           _ <- client().status(POST(baseUri / origin))
           _ <- client().status(POST(baseUri / destination))
-          _ <- client().status(POST(baseUri / origin / "deposit" / amount.show))
-          _ <- client().status(
-            POST(baseUri / origin / "transfer" / "to" / destination / amount.show)
+          _ <- assertIO(
+            client().status(POST(baseUri / origin / "deposit" / amount.show)),
+            Status.Ok
+          )
+          _ <- assertIO(
+            client().status(POST(baseUri / origin / "transfer" / "to" / destination / amount.show)),
+            Status.Ok
           )
           _ <- assertIO(
             client()
@@ -97,8 +97,9 @@ class PekkoAccountsAppSuite
               .map(_.toInt),
             amount.value
           )
-          _ <- client().status(
-            POST(baseUri / destination / "withdraw" / amount.show)
+          _ <- assertIO(
+            client().status(POST(baseUri / destination / "withdraw" / amount.show)),
+            Status.Ok
           ) // clear the account
         } yield ()
     }

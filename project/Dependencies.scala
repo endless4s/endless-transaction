@@ -92,4 +92,6 @@ object Dependencies {
   )
 
   lazy val `cats-scalacheck` = Seq("io.chrisdavenport" %% "cats-scalacheck" % "0.3.2")
+
+  lazy val `kittens` = Seq("org.typelevel" %% "kittens" % "3.3.0")
 }

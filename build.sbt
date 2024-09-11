@@ -99,7 +99,7 @@ lazy val example = (project in file("example"))
     libraryDependencies ++= Seq(
       `endless-core`,
       `scalapb-runtime`
-    ) ++ pekko ++ pekkoTest ++ akka ++ akkaTest ++ http4s ++ `log4cats-core` ++ `log4cats-slf4j` ++ `logback-classic` ++
+    ) ++ pekko ++ pekkoTest ++ akka ++ akkaTest ++ http4s ++ `log4cats-core` ++ `log4cats-slf4j` ++ `logback-classic` ++ kittens ++
       (munit ++ `munit-cats-effect-3` ++ `scalacheck-effect-munit` ++ `log4cats-testing` ++ `cats-scalacheck` ++ `cats-effect-testkit` ++ scalatest ++ Seq(
         postgresql,
         `pekko-persistence-jdbc`
