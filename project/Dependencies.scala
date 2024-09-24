@@ -1,7 +1,7 @@
 import sbt.*
 
 object Dependencies {
-  val endlessVersion = "0.30.0"
+  val endlessVersion = "0.31.0"
   val `endless-core` = "io.github.endless4s" %% "endless-core" % endlessVersion
   val `endless-protobuf-helpers` =
     "io.github.endless4s" %% "endless-protobuf-helpers" % endlessVersion
