@@ -19,7 +19,7 @@ object Dependencies {
     "org.http4s" %% "http4s-circe" % http4sVersion
   )
 
-  lazy val pekkoVersion = "1.1.1"
+  lazy val pekkoVersion = "1.1.2"
   lazy val `pekko-actor-typed` = "org.apache.pekko" %% "pekko-actor-typed"
   lazy val `pekko-persistence-typed` = "org.apache.pekko" %% "pekko-persistence-typed"
   lazy val `pekko-cluster-typed` = "org.apache.pekko" %% "pekko-cluster-typed"
