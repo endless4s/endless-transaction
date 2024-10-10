@@ -56,7 +56,7 @@ private[transaction] final class ShardedCoordinator[F[_]: Logger, TID, BID, Q, R
         case Left(_) =>
           Resource.eval(Logger[F].warn(show"Transaction $id already exists")) >> Resource
             .raiseError[F, Transaction[F, BID, Q, R], Throwable](
-              Coordinator.TransactionAlreadyExists
+              new Coordinator.TransactionAlreadyExists
             )
       }
 
