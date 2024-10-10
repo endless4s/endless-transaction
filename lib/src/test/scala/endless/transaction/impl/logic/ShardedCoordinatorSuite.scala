@@ -139,7 +139,7 @@ class ShardedCoordinatorSuite
           def entityFor(id: TID): TransactionAlg[IO, TID, BID, Q, R] = testTransaction
         }
       val coordinator = new ShardedCoordinator(sharding)
-      interceptIO[Coordinator.TransactionAlreadyExists.type](
+      interceptIO[Coordinator.TransactionAlreadyExists](
         coordinator
           .create(tid, query, branches.head, branches.tail*)
           .use_

@@ -66,5 +66,5 @@ trait Coordinator[F[_], TID, BID, Q, R] {
 }
 
 object Coordinator {
-  object TransactionAlreadyExists extends Exception("Transaction with the given ID already exists")
+  class TransactionAlreadyExists extends Exception("Transaction with the given ID already exists")
 }
