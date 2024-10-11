@@ -74,22 +74,19 @@ object Dependencies {
   lazy val `log4cats-slf4j` = Seq("org.typelevel" %% "log4cats-slf4j" % log4catsVersion)
   lazy val `log4cats-testing` = Seq("org.typelevel" %% "log4cats-testing" % log4catsVersion)
 
-  lazy val munitVersion = "1.0.0"
-  lazy val munit =
-    Seq("org.scalameta" %% "munit", "org.scalameta" %% "munit-scalacheck").map(_ % munitVersion)
+  lazy val munit = "org.scalameta" %% "munit" % "1.0.2"
+  lazy val `munit-scalacheck` = "org.scalameta" %% "munit-scalacheck" % "1.0.0"
 
   lazy val scalatest = Seq("org.scalatest" %% "scalatest" % "3.2.19") // for multi-jvm tests
 
-  lazy val `munit-cats-effect-3` = Seq("org.typelevel" %% "munit-cats-effect" % "2.0.0")
+  lazy val `munit-cats-effect-3` = "org.typelevel" %% "munit-cats-effect" % "2.0.0"
 
   lazy val catsEffectVersion = "3.5.4"
   lazy val `cats-effect` = "org.typelevel" %% "cats-effect" % catsEffectVersion
 
   lazy val `cats-effect-testkit` = Seq("org.typelevel" %% "cats-effect-testkit" % catsEffectVersion)
 
-  lazy val `scalacheck-effect-munit` = Seq(
-    "org.typelevel" %% "scalacheck-effect-munit" % "2.0.0-M2"
-  )
+  lazy val `scalacheck-effect-munit` = "org.typelevel" %% "scalacheck-effect-munit" % "2.0.0-M2"
 
   lazy val `cats-scalacheck` = Seq("io.chrisdavenport" %% "cats-scalacheck" % "0.3.2")
 }
