@@ -2,7 +2,7 @@ import Dependencies.*
 import sbt.project
 
 val scala213 = "2.13.15"
-val scala3 = "3.4.1"
+val scala3 = "3.5.1"
 
 val commonSettings = Seq(
   wartremoverExcluded += sourceManaged.value,
@@ -23,7 +23,7 @@ val commonSettings = Seq(
   }),
   Compile / scalacOptions ++= Seq("-Xfatal-warnings", "-unchecked", "-deprecation"),
   Compile / scalacOptions ++= (CrossVersion.partialVersion(scalaVersion.value) match {
-    case Some((3, _)) => Seq("-Ykind-projector:underscores")
+    case Some((3, _)) => Seq("-Xkind-projector:underscores")
     case Some((2, _)) =>
       Seq("-Xsource:3", "-P:kind-projector:underscore-placeholders", "-Xlint:unused")
     case _ => Nil
@@ -72,7 +72,11 @@ lazy val lib = (project in file("lib"))
       `endless-protobuf-helpers`,
       `scalapb-runtime`,
       `cats-effect`
-    ) ++ (munit ++ `munit-cats-effect-3` ++ `scalacheck-effect-munit` ++ `log4cats-testing` ++ `cats-scalacheck` ++ `cats-effect-testkit`)
+    ) ++ (Seq(
+      munit,
+      `munit-cats-effect-3`,
+      `scalacheck-effect-munit`
+    ) ++ `log4cats-testing` ++ `cats-scalacheck` ++ `cats-effect-testkit`)
       .map(_ % Test)
   )
 
@@ -100,7 +104,12 @@ lazy val example = (project in file("example"))
       `endless-core`,
       `scalapb-runtime`
     ) ++ pekko ++ pekkoTest ++ akka ++ akkaTest ++ http4s ++ `log4cats-core` ++ `log4cats-slf4j` ++ `logback-classic` ++
-      (munit ++ `munit-cats-effect-3` ++ `scalacheck-effect-munit` ++ `log4cats-testing` ++ `cats-scalacheck` ++ `cats-effect-testkit` ++ scalatest ++ Seq(
+      (Seq(
+        munit,
+        `munit-scalacheck`,
+        `munit-cats-effect-3`,
+        `scalacheck-effect-munit`
+      ) ++ `log4cats-testing` ++ `cats-scalacheck` ++ `cats-effect-testkit` ++ scalatest ++ Seq(
         postgresql,
         `pekko-persistence-jdbc`
       ) ++ slick).map(_ % Test)
