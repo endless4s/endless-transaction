@@ -2,7 +2,6 @@ package endless.transaction.example.logic
 
 import cats.data.NonEmptyList
 import cats.effect.IO
-import cats.effect.kernel.Resource
 import cats.syntax.either.*
 import endless.\/
 import endless.core.entity.Sharding
@@ -91,8 +90,8 @@ class ShardedAccountsSuite
           query: Transfer,
           branch: AccountID,
           otherBranches: AccountID*
-      ): Resource[IO, Transaction[IO, AccountID, Transfer, TransferFailure]] =
-        Resource.pure(new Transaction[IO, AccountID, Transfer, TransferFailure] {
+      ): IO[Transaction[IO, AccountID, Transfer, TransferFailure]] =
+        IO(new Transaction[IO, AccountID, Transfer, TransferFailure] {
           def query: IO[Transaction.Unknown.type \/ Transfer] = fail("should not be called")
           def branches: IO[Transaction.Unknown.type \/ Set[AccountID]] =
             fail("should not be called")
@@ -102,7 +101,8 @@ class ShardedAccountsSuite
             fail("should not be called")
         })
 
-      def get(id: TransferID): Resource[IO, Transaction[IO, AccountID, Transfer, TransferFailure]] =
-        fail("should not be called")
+      def get(id: TransferID): Transaction[IO, AccountID, Transfer, TransferFailure] = fail(
+        "should not be called"
+      )
     }
 }

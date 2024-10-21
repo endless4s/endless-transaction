@@ -86,6 +86,10 @@ message Failed {
 
 message Unknown {}
 
-message TooLateToAbort {}
+message TooLateToAbort {
+  string message = 1;
+}
 
-message TransactionFailed {}
+message TransactionFailed {
+  string message = 1;
+}

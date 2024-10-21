@@ -4,6 +4,7 @@ import cats.data.NonEmptyList
 import cats.effect.IO
 import endless.\/
 import endless.core.entity.Sharding
+import endless.transaction.Transaction.TooLateToAbort
 import endless.transaction.helpers.LogMessageAssertions
 import endless.transaction.impl.Generators
 import endless.transaction.impl.algebra.{TransactionAlg, TransactionCreator}
@@ -30,7 +31,7 @@ class ShardedCoordinatorSuite
           def entityFor(id: TID): TransactionAlg[IO, TID, BID, Q, R] = testTransaction
         }
       val coordinator = new ShardedCoordinator(sharding)
-      assertIO_(coordinator.get(tid).use_)
+      assertIO_(coordinator.get(tid).asResource.use_)
     }
   }
 
@@ -47,24 +48,29 @@ class ShardedCoordinatorSuite
           def entityFor(id: TID): TransactionAlg[IO, TID, BID, Q, R] = testTransaction
         }
       val coordinator = new ShardedCoordinator(sharding)
-      coordinator.get(tid).use_ >> logger.assertLogsDebug
+      coordinator.get(tid).asResource.use_
     }
   }
 
   test("transaction resource release logs a warning when abort fails") {
-    forAllF { (tid: TID, pendingTransactionStatus: Transaction.Status.Pending[R]) =>
-      val testTransaction = new TestTransaction {
-        def status: IO[Transaction.Unknown.type \/ Transaction.Status[R]] =
-          IO.pure(Right(pendingTransactionStatus))
-        override def abort(reason: Option[R]): IO[Transaction.AbortError \/ Unit] =
-          IO.pure(Left(Transaction.TooLateToAbort))
-      }
-      val sharding =
-        new Sharding[IO, TID, ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T] {
-          def entityFor(id: TID): TransactionAlg[IO, TID, BID, Q, R] = testTransaction
+    forAllF {
+      (
+          tid: TID,
+          pendingTransactionStatus: Transaction.Status.Pending[R],
+          tooLateToAbort: TooLateToAbort
+      ) =>
+        val testTransaction = new TestTransaction {
+          def status: IO[Transaction.Unknown.type \/ Transaction.Status[R]] =
+            IO.pure(Right(pendingTransactionStatus))
+          override def abort(reason: Option[R]): IO[Transaction.AbortError \/ Unit] =
+            IO.pure(Left(tooLateToAbort))
         }
-      val coordinator = new ShardedCoordinator(sharding)
-      coordinator.get(tid).use_ >> logger.assertLogsDebug >> logger.assertLogsWarn
+        val sharding =
+          new Sharding[IO, TID, ({ type T[F[_]] = TransactionAlg[F, TID, BID, Q, R] })#T] {
+            def entityFor(id: TID): TransactionAlg[IO, TID, BID, Q, R] = testTransaction
+          }
+        val coordinator = new ShardedCoordinator(sharding)
+        coordinator.get(tid).asResource.use_ >> logger.assertLogsWarn
     }
   }
 
@@ -79,7 +85,7 @@ class ShardedCoordinatorSuite
           def entityFor(id: TID): TransactionAlg[IO, TID, BID, Q, R] = testTransaction
         }
       val coordinator = new ShardedCoordinator(sharding)
-      coordinator.get(tid).use_ >> logger.assertLogsDebug
+      coordinator.get(tid).asResource.use_
     }
   }
 
@@ -94,7 +100,7 @@ class ShardedCoordinatorSuite
           def entityFor(id: TID): TransactionAlg[IO, TID, BID, Q, R] = testTransaction
         }
       val coordinator = new ShardedCoordinator(sharding)
-      coordinator.get(tid).use_ >> logger.assertLogsDebug >> logger.assertLogsWarn
+      coordinator.get(tid).asResource.use_ >> logger.assertLogsWarn
     }
   }
 
@@ -117,6 +123,7 @@ class ShardedCoordinatorSuite
       val coordinator = new ShardedCoordinator(sharding)
       coordinator
         .create(tid, query, branches.head, branches.tail*)
+        .asResource
         .use_ >> logger.assertLogsDebug
     }
   }
@@ -142,6 +149,7 @@ class ShardedCoordinatorSuite
       interceptIO[Coordinator.TransactionAlreadyExists](
         coordinator
           .create(tid, query, branches.head, branches.tail*)
+          .asResource
           .use_
       ) >> logger.assertLogsDebug >> logger.assertLogsWarn
     }

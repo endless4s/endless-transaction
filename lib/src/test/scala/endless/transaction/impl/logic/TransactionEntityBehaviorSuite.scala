@@ -132,9 +132,9 @@ class TransactionEntityBehaviorSuite
           .abort(reason)
           .run(Some(state))
           .map {
-            case Right((_, Left(Transaction.TooLateToAbort))) => ()
-            case Right((_, _))                                => fail("Unexpected")
-            case Left(error)                                  => fail(error)
+            case Right((_, Left(Transaction.TooLateToAbort(_)))) => ()
+            case Right((_, _))                                   => fail("Unexpected")
+            case Left(error)                                     => fail(error)
           }
     }
   }
@@ -158,9 +158,9 @@ class TransactionEntityBehaviorSuite
         .abort(reason)
         .run(Some(state))
         .map {
-          case Right((_, Left(Transaction.TransactionFailed))) => ()
-          case Right((_, _))                                   => fail("Unexpected")
-          case Left(error)                                     => fail(error)
+          case Right((_, Left(Transaction.TransactionFailed(_)))) => ()
+          case Right((_, _))                                      => fail("Unexpected")
+          case Left(error)                                        => fail(error)
         }
     }
   }

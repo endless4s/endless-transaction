@@ -1,7 +1,5 @@
 package endless.transaction
 
-import cats.effect.kernel.Resource
-
 /** A coordinator allows for creating and recovering transactions of a certain type. Internally, it
   * implements the two-phase commit protocol to guarantee a final transaction state of either
   * committed or aborted.
@@ -19,9 +17,7 @@ import cats.effect.kernel.Resource
   */
 trait Coordinator[F[_], TID, BID, Q, R] {
 
-  /** Creates a new transaction with the given id, query and branches, and returns a handle to it
-    * wrapped in a `Resource`. Resource release leads to transaction abort if it is still pending
-    * (or a no-op if the transaction is already completed).
+  /** Creates a new transaction with the given id, query and branches.
     *
     * @note
     *   the transaction identifier must be unique and an exception will be raised in the target
@@ -42,14 +38,11 @@ trait Coordinator[F[_], TID, BID, Q, R] {
       query: Q,
       branch: BID,
       otherBranches: BID*
-  ): Resource[F, Transaction[F, BID, Q, R]]
+  ): F[Transaction[F, BID, Q, R]]
 
   /** Recovers a transaction with the given id. Can be used by recovering clients who lost the
     * handle to the transaction and that require further interaction with it, or to retrieve
     * information about past transactions.
-    *
-    * Resource release leads to transaction abort if it is still pending (or a no-op if the
-    * transaction is already completed).
     *
     * @note
     *   by default, pending transactions are recovered automatically upon coordinator startup
@@ -62,7 +55,7 @@ trait Coordinator[F[_], TID, BID, Q, R] {
     * @return
     *   handle to the transaction
     */
-  def get(id: TID): Resource[F, Transaction[F, BID, Q, R]]
+  def get(id: TID): Transaction[F, BID, Q, R]
 }
 
 object Coordinator {

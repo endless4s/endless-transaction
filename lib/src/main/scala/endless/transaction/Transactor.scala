@@ -114,6 +114,7 @@ trait Transactor[F[_]] {
     type Alg[K[_]] = TransactionAlg[K, TID, BID, Q, R]
     type RepositoryAlg[K[_]] = Coordinator[K, TID, BID, Q, R]
     implicit val entityNameProvider: EntityNameProvider[TID] = () => transactionName
+    implicit val entityIDShow: Show[TID] = Show.show(implicitly[StringCodec[TID]].encode)
     implicit val protocol: CommandProtocol[TID, Alg] = new TransactionProtocol[TID, BID, Q, R]
     implicit val eventApplier: EventApplier[S, E] = new TransactionEventApplier[TID, BID, Q, R]
     deployer
