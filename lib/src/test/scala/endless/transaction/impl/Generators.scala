@@ -125,10 +125,10 @@ trait Generators {
   val alreadyExistsGen: Gen[TransactionCreator.AlreadyExists.type] =
     Gen.const(TransactionCreator.AlreadyExists)
   val unknownGen: Gen[Transaction.Unknown.type] = Gen.const(Transaction.Unknown)
-  val tooLateToAbortGen: Gen[Transaction.TooLateToAbort.type] =
-    Gen.const(Transaction.TooLateToAbort)
-  val transactionFailedGen: Gen[Transaction.TransactionFailed.type] =
-    Gen.const(Transaction.TransactionFailed)
+  val tooLateToAbortGen: Gen[Transaction.TooLateToAbort] =
+    Gen.alphaNumStr.map(Transaction.TooLateToAbort(_))
+  val transactionFailedGen: Gen[Transaction.TransactionFailed] =
+    Gen.alphaNumStr.map(Transaction.TransactionFailed(_))
 
   val abortErrorGen: Gen[Transaction.AbortError] = Gen.oneOf(
     unknownGen,
@@ -194,10 +194,10 @@ trait Generators {
     alreadyExistsGen
   )
   implicit val arbUnknown: Arbitrary[Transaction.Unknown.type] = Arbitrary(unknownGen)
-  implicit val arbTooLateToAbort: Arbitrary[Transaction.TooLateToAbort.type] = Arbitrary(
+  implicit val arbTooLateToAbort: Arbitrary[Transaction.TooLateToAbort] = Arbitrary(
     tooLateToAbortGen
   )
-  implicit val arbTransactionFailed: Arbitrary[Transaction.TransactionFailed.type] = Arbitrary(
+  implicit val arbTransactionFailed: Arbitrary[Transaction.TransactionFailed] = Arbitrary(
     transactionFailedGen
   )
   implicit val arbTransactionEvent: Arbitrary[TransactionEvent[TID, BID, Q, R]] = Arbitrary(

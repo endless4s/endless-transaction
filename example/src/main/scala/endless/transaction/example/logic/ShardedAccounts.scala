@@ -29,6 +29,7 @@ final class ShardedAccounts[F[_]: Temporal: Logger](
   def transfer(from: AccountID, to: AccountID, amount: PosAmount): F[TransferFailure \/ Unit] =
     coordinator
       .create(TransferID.random, Transfer(from, to, amount), from, to)
+      .asResource
       .use(_.pollForFinalStatus())
       .flatMap {
         case Status.Committed => ().asRight[TransferFailure].pure

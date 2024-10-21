@@ -5,6 +5,7 @@ import cats.data.{EitherT, NonEmptyList}
 import cats.syntax.applicative.*
 import cats.syntax.either.*
 import cats.syntax.functor.*
+import cats.syntax.show.*
 import endless.\/
 import endless.core.entity.Entity
 import endless.transaction.Transaction.{
@@ -19,7 +20,13 @@ import endless.transaction.impl.data.{TransactionEvent, TransactionState}
 import endless.transaction.{Branch, Transaction}
 import org.typelevel.log4cats.Logger
 
-private[transaction] final class TransactionEntityBehavior[F[_]: Logger, TID, BID: Show, Q, R](
+private[transaction] final class TransactionEntityBehavior[
+    F[_]: Logger,
+    TID: Show,
+    BID: Show,
+    Q,
+    R
+](
     entity: Entity[F, TransactionState[TID, BID, Q, R], TransactionEvent[TID, BID, Q, R]]
 ) extends TransactionAlg[F, TID, BID, Q, R] {
   import entity.*
@@ -39,14 +46,25 @@ private[transaction] final class TransactionEntityBehavior[F[_]: Logger, TID, BI
 
   def status: F[Transaction.Unknown.type \/ Transaction.Status[R]] = ifKnown(_.status)(Unknown)
 
-  def abort(reason: Option[R]): F[AbortError \/ Unit] = ifKnownFE(_.status match {
-    case Status.Preparing =>
-      write(TransactionEvent.ClientAborted(reason)).map(_ => ().asRight[AbortError])
-    case Status.Committing                      => (TooLateToAbort: AbortError).asLeft[Unit].pure
-    case Status.Committed                       => (TooLateToAbort: AbortError).asLeft[Unit].pure
-    case Status.Failed(_)                       => (TransactionFailed: AbortError).asLeft[Unit].pure
-    case Status.Aborting(_) | Status.Aborted(_) => ().asRight[AbortError].pure
-  })(Unknown: AbortError)
+  def abort(reason: Option[R]): F[AbortError \/ Unit] = ifKnownFE(state =>
+    state.status match {
+      case Status.Preparing =>
+        write(TransactionEvent.ClientAborted(reason)).map(_ => ().asRight[AbortError])
+      case Status.Committing =>
+        (TooLateToAbort(
+          show"Too late to abort transaction ${state.id}: already committing"
+        ): AbortError).asLeft[Unit].pure
+      case Status.Committed =>
+        (TooLateToAbort(
+          show"Too late to abort transaction ${state.id}: already committed"
+        ): AbortError).asLeft[Unit].pure
+      case Status.Failed(_) =>
+        (TransactionFailed(
+          show"Too late to abort transaction ${state.id}: already failed"
+        ): AbortError).asLeft[Unit].pure
+      case Status.Aborting(_) | Status.Aborted(_) => ().asRight[AbortError].pure
+    }
+  )(Unknown: AbortError)
 
   def branchVoted(branch: BID, vote: Branch.Vote[R]): F[Unit] =
     EitherT(

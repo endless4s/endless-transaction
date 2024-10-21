@@ -23,12 +23,12 @@ Some examples of commit operations in the same imaginary touristic journey booki
 
 | Example: orchestration of the booking process for a journey   | Data store         | Transaction branch operation          |
 |---------------------------------------------------------------|--------------------|---------------------------------------|
-| Do nothing: reservations were already made                    | External API       | -                                     |
-| Do nothing: the guarantee charge was already made             | Internal service   | -                                     |
+| Do nothing: reservations were already made                    | External API       | nop                                   |
+| Do nothing: the guarantee charge was already made             | Internal service   | nop                                   |
 | Update customer details in the internal database              | Database           | Perform the row update and unlock     |
 | Update the "recent bookings" cache and release the semaphore  | In-memory resource | Edit and unlock an in-memory resource |
-| Do nothing: the reminder notifications were already scheduled | Actor cluster      | -                                     |
-| Do nothing: the bookings log was already updated              | File               | -                                     |
+| Do nothing: the reminder notifications were already scheduled | Actor cluster      | nop                                   |
+| Do nothing: the bookings log was already updated              | File               | nop                                   |
 
 @@@ note { title="Commit consistency" }
 It's up to the implementer to decide the level of consistency in the execution of the commit. Transaction failure is also valid and can be signaled by raising an exception in the target effect. Failure will lead to inconsistency in the overall system state, which can be an acceptable

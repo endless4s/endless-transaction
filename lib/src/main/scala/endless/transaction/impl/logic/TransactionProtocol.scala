@@ -104,17 +104,19 @@ private[transaction] class TransactionProtocol[TID, BID, Q, R](implicit
         handleCommand[F, AbortReply, AbortError \/ Unit](
           _.abort(Option.unless(reason.isEmpty)(decodeFromByteString[R](reason))),
           {
-            case Left(TooLateToAbort) =>
-              AbortReply(
-                AbortReply.Reply.Error(
-                  model.AbortError(model.AbortError.Error.TooLateToAbort(model.TooLateToAbort()))
-                )
-              )
-            case Left(TransactionFailed) =>
+            case Left(TooLateToAbort(message)) =>
               AbortReply(
                 AbortReply.Reply.Error(
                   model.AbortError(
-                    model.AbortError.Error.TransactionFailed(model.TransactionFailed())
+                    model.AbortError.Error.TooLateToAbort(model.TooLateToAbort(message))
+                  )
+                )
+              )
+            case Left(TransactionFailed(message)) =>
+              AbortReply(
+                AbortReply.Reply.Error(
+                  model.AbortError(
+                    model.AbortError.Error.TransactionFailed(model.TransactionFailed(message))
                   )
                 )
               )
@@ -159,7 +161,7 @@ private[transaction] class TransactionProtocol[TID, BID, Q, R](implicit
         handleCommand[F, UnitReply, Unit](_.timeout(), _ => UnitReply())
     })
 
-  def clientFor[F[_]](id: TID)(implicit
+  def clientFor[F[_]](tid: TID)(implicit
       sender: CommandSender[F, TID]
   ): TransactionAlg[F, TID, BID, Q, R] = new TransactionAlg[F, TID, BID, Q, R] {
     def create(id: TID, query: Q, branches: NonEmptyList[BID]): F[AlreadyExists.type \/ Unit] =
@@ -186,7 +188,7 @@ private[transaction] class TransactionProtocol[TID, BID, Q, R](implicit
 
     def query: F[Unknown.type \/ Q] =
       sendCommand[F, TransactionCommand, QueryReply, Unknown.type \/ Q](
-        id,
+        tid,
         TransactionCommand.of(Command.GetQuery(GetQueryCommand())),
         {
           case QueryReply(QueryReply.Reply.Unknown(_), _) => Unknown.asLeft
@@ -199,7 +201,7 @@ private[transaction] class TransactionProtocol[TID, BID, Q, R](implicit
 
     def branches: F[Unknown.type \/ Set[BID]] =
       sendCommand[F, TransactionCommand, BranchesReply, Unknown.type \/ Set[BID]](
-        id,
+        tid,
         TransactionCommand.of(Command.GetBranches(GetBranchesCommand())),
         {
           case BranchesReply(BranchesReply.Reply.Unknown(_), _) =>
@@ -215,7 +217,7 @@ private[transaction] class TransactionProtocol[TID, BID, Q, R](implicit
       sendCommand[F, TransactionCommand, StatusReply, Unknown.type \/ Transaction.Status[
         R
       ]](
-        id,
+        tid,
         TransactionCommand.of(Command.GetStatus(GetStatusCommand())),
         {
           case StatusReply(StatusReply.Reply.Unknown(_), _) =>
@@ -243,17 +245,17 @@ private[transaction] class TransactionProtocol[TID, BID, Q, R](implicit
 
     def abort(reason: Option[R]): F[AbortError \/ Unit] =
       sendCommand[F, TransactionCommand, AbortReply, AbortError \/ Unit](
-        id,
+        tid,
         TransactionCommand.of(
           Command.Abort(AbortCommand(reason.map(encodeToByteString[R]).getOrElse(ByteString.EMPTY)))
         ),
         {
           case AbortReply(AbortReply.Reply.Error(error), _) =>
             error.error match {
-              case model.AbortError.Error.TooLateToAbort(_) =>
-                TooLateToAbort.asLeft
-              case model.AbortError.Error.TransactionFailed(_) =>
-                TransactionFailed.asLeft
+              case model.AbortError.Error.TooLateToAbort(tooLate) =>
+                TooLateToAbort(tooLate.message).asLeft
+              case model.AbortError.Error.TransactionFailed(failed) =>
+                TransactionFailed(failed.message).asLeft
               case model.AbortError.Error.Unknown(_) =>
                 Unknown.asLeft
               case model.AbortError.Error.Empty => throw new UnexpectedReplyException
@@ -267,7 +269,7 @@ private[transaction] class TransactionProtocol[TID, BID, Q, R](implicit
 
     def branchVoted(branch: BID, vote: Branch.Vote[R]): F[Unit] =
       sendCommand[F, TransactionCommand, UnitReply, Unit](
-        id,
+        tid,
         TransactionCommand.of(
           Command.BranchVoted(
             BranchVotedCommand(
@@ -285,7 +287,7 @@ private[transaction] class TransactionProtocol[TID, BID, Q, R](implicit
 
     def branchCommitted(branch: BID): F[Unit] =
       sendCommand[F, TransactionCommand, UnitReply, Unit](
-        id,
+        tid,
         TransactionCommand.of(
           Command.BranchCommitted(BranchCommittedCommand(encodeBranchID(branch)))
         ),
@@ -294,14 +296,14 @@ private[transaction] class TransactionProtocol[TID, BID, Q, R](implicit
 
     def branchAborted(branch: BID): F[Unit] =
       sendCommand[F, TransactionCommand, UnitReply, Unit](
-        id,
+        tid,
         TransactionCommand.of(Command.BranchAborted(BranchAbortedCommand(encodeBranchID(branch)))),
         _ => ()
       )
 
     def branchFailed(branch: BID, error: String): F[Unit] =
       sendCommand[F, TransactionCommand, UnitReply, Unit](
-        id,
+        tid,
         TransactionCommand.of(
           Command.BranchFailed(BranchFailedCommand(encodeBranchID(branch), error))
         ),
@@ -313,6 +315,8 @@ private[transaction] class TransactionProtocol[TID, BID, Q, R](implicit
       TransactionCommand.of(Command.TransactionTimeout(TransactionTimeoutCommand())),
       _ => ()
     )
+
+    def id: TID = tid
   }
 
   private def encodeAbortReason(reason: AbortReason[R]) = {
