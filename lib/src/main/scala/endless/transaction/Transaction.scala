@@ -144,14 +144,18 @@ object Transaction {
     final case class Failed(errors: NonEmptyList[String]) extends Final[Nothing]
   }
 
-  implicit class TransactionOpsF[F[_]: Temporal: Logger, TID, BID, Q, R](
+  implicit class TransactionOpsF[F[_]: Temporal: Logger, BID, Q, R](
       transactionF: F[Transaction[F, BID, Q, R]]
   ) {
+
+    /** Wraps the transaction in F context in a resource, which will abort the transaction if it is
+      * still pending.
+      */
     def asResource: Resource[F, Transaction[F, BID, Q, R]] =
-      Resource.make(transactionF)(_.asResource.use_)
+      Resource.make(transactionF)(release)
   }
 
-  implicit class TransactionOps[F[_]: Temporal: Logger, TID, BID, Q, R](
+  implicit class TransactionOps[F[_]: Temporal: Logger, BID, Q, R](
       transaction: Transaction[F, BID, Q, R]
   ) {
 
@@ -159,23 +163,7 @@ object Transaction {
       * pending.
       */
     def asResource: Resource[F, Transaction[F, BID, Q, R]] =
-      Resource.make(transaction.pure)(_ =>
-        (transaction.status >>= {
-          case Right(_: Transaction.Status.Final[R]) => ().pure
-          case Right(_: Transaction.Status.Pending[R]) =>
-            EitherT(transaction.abort()).foldF(
-              {
-                case Unknown => Logger[F].warn(show"Abort failed: transaction not yet created")
-                case TooLateToAbort(message)    => Logger[F].warn(message)
-                case TransactionFailed(message) => Logger[F].warn(message)
-              },
-              _ => ().pure
-            )
-          case Left(Unknown) => Logger[F].warn(show"Abort failed: transaction not yet created")
-        }).handleErrorWith(throwable =>
-          Logger[F].warn(throwable)(show"Failed to abort transaction")
-        )
-      )
+      Resource.make(transaction.pure)(release)
 
     /** Polls for the status of the transaction until it reaches a final state.
       * @param frequency
@@ -193,4 +181,19 @@ object Transaction {
         }
       } yield result
   }
+
+  private def release[F[_]: Temporal: Logger, BID, Q, R](transaction: Transaction[F, BID, Q, R]) =
+    (transaction.status >>= {
+      case Right(_: Transaction.Status.Final[R]) => ().pure
+      case Right(_: Transaction.Status.Pending[R]) =>
+        EitherT(transaction.abort()).foldF(
+          {
+            case Unknown => Logger[F].warn(show"Abort failed: transaction not yet created")
+            case TooLateToAbort(message)    => Logger[F].warn(message)
+            case TransactionFailed(message) => Logger[F].warn(message)
+          },
+          _ => ().pure
+        )
+      case Left(Unknown) => Logger[F].warn(show"Abort failed: transaction not yet created")
+    }).handleErrorWith(throwable => Logger[F].warn(throwable)(show"Failed to abort transaction"))
 }
