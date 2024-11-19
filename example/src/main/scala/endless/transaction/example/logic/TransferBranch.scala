@@ -9,6 +9,7 @@ import cats.syntax.show.*
 import cats.syntax.applicative.*
 import cats.conversions.all.*
 import endless.transaction.Branch
+import endless.transaction.Transaction.AbortReason
 import endless.transaction.example.algebra.Account
 import endless.transaction.example.algebra.Account.InsufficientFunds
 import endless.transaction.example.algebra.Accounts.TransferFailure
@@ -81,7 +82,7 @@ class TransferBranch[F[_]: Logger](accountID: AccountID, account: Account[F])(im
           pure
         )
 
-  def abort(transferID: TransferID): F[Unit] =
+  def abort(transferID: TransferID, reason: AbortReason[TransferFailure]): F[Unit] =
     Logger[F].debug(show"Aborting transfer $transferID for account $accountID") >>
       EitherT(
         account

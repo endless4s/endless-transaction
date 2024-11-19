@@ -9,6 +9,7 @@ import endless.transaction.example.data.Transfer.TransferID
 import endless.transaction.example.Generators
 import cats.syntax.either.*
 import endless.transaction.Branch
+import endless.transaction.Transaction.AbortReason
 import endless.transaction.example.algebra.Accounts.TransferFailure
 import endless.transaction.example.helpers.RetryHelpers.RetryParameters
 import endless.transaction.helpers.LogMessageAssertions
@@ -243,8 +244,8 @@ class TransferBranchSuite
           }
         }
       )
-      assertIO(destinationBranch.abort(transferID), ()) >> assertIO(
-        originBranch.abort(transferID),
+      assertIO(destinationBranch.abort(transferID, AbortReason.Timeout), ()) >> assertIO(
+        originBranch.abort(transferID, AbortReason.Timeout),
         ()
       ) >> testLogger.assertLogsDebug
     }
@@ -348,7 +349,7 @@ class TransferBranchSuite
           }
         )
         _ <- assertIO(
-          branch.abort(transferID),
+          branch.abort(transferID, AbortReason.Timeout),
           ()
         )
         _ <- testLogger.assertLogsWarn

@@ -8,7 +8,7 @@ import endless.core.entity.Effector.PassivationState
 import endless.core.entity.SideEffect.Trigger
 import endless.transaction.{Branch, Transaction}
 import endless.transaction.Branch.Vote
-import endless.transaction.Transaction.Status
+import endless.transaction.Transaction.{AbortReason, Status}
 import endless.transaction.impl.Generators
 import endless.transaction.impl.algebra.{TransactionAlg, TransactionCreator}
 import endless.transaction.impl.data.TransactionState
@@ -44,7 +44,7 @@ class TransactionSideEffectSuite
               new TestBranch {
                 override def prepare(transactionID: TID, query: Q): IO[Vote[R]] = IO(Vote.Commit)
                 override def commit(transactionId: TID): IO[Unit] = IO.unit
-                override def abort(transactionID: TID): IO[Unit] = IO.unit
+                override def abort(transactionID: TID, reason: AbortReason[R]): IO[Unit] = IO.unit
               }
           )
         )
@@ -78,7 +78,7 @@ class TransactionSideEffectSuite
               new TestBranch {
                 override def prepare(transactionID: TID, query: Q): IO[Vote[R]] = IO(Vote.Commit)
                 override def commit(transactionId: TID): IO[Unit] = IO.unit
-                override def abort(transactionID: TID): IO[Unit] = IO.unit
+                override def abort(transactionID: TID, reason: AbortReason[R]): IO[Unit] = IO.unit
               }
           )
         )
@@ -114,7 +114,7 @@ class TransactionSideEffectSuite
               new TestBranch {
                 override def prepare(transactionID: TID, query: Q): IO[Vote[R]] = IO(Vote.Commit)
                 override def commit(transactionId: TID): IO[Unit] = IO.unit
-                override def abort(transactionID: TID): IO[Unit] = IO.unit
+                override def abort(transactionID: TID, reason: AbortReason[R]): IO[Unit] = IO.unit
               }
           )
         )
@@ -425,8 +425,8 @@ class TransactionSideEffectSuite
             neverTimeout,
             (_: BID) =>
               new TestBranch {
-                override def abort(transactionID: TID): IO[Unit] =
-                  IO.unit
+                override def abort(transactionID: TID, reason: AbortReason[R]): IO[Unit] =
+                  assertIOBoolean(IO(reason == aborting.reason))
               }
           )
         )
@@ -460,7 +460,7 @@ class TransactionSideEffectSuite
             neverTimeout,
             (bid: BID) =>
               new TestBranch {
-                override def abort(transactionID: TID): IO[Unit] =
+                override def abort(transactionID: TID, reason: AbortReason[R]): IO[Unit] =
                   if (bid == aborting.branches.head) shouldNotBeCalled else IO.unit
               }
           )
@@ -497,7 +497,8 @@ class TransactionSideEffectSuite
             neverTimeout,
             (_: BID) =>
               new TestBranch {
-                override def abort(transactionID: TID): IO[Unit] = shouldNotBeCalled
+                override def abort(transactionID: TID, reason: AbortReason[R]): IO[Unit] =
+                  shouldNotBeCalled
               }
           )
         )
@@ -526,7 +527,7 @@ class TransactionSideEffectSuite
             neverTimeout,
             (_: BID) =>
               new TestBranch {
-                override def abort(transactionID: TID): IO[Unit] =
+                override def abort(transactionID: TID, reason: AbortReason[R]): IO[Unit] =
                   IO.raiseError(new Exception("boom"))
               }
           )
@@ -599,7 +600,7 @@ class TransactionSideEffectSuite
   trait TestBranch extends Branch[IO, TID, Q, R] {
     def prepare(transactionID: TID, query: Q): IO[Vote[R]] = shouldNotBeCalled
     def commit(transactionId: TID): IO[Unit] = shouldNotBeCalled
-    def abort(transactionID: TID): IO[Unit] = shouldNotBeCalled
+    def abort(transactionID: TID, reason: AbortReason[R]): IO[Unit] = shouldNotBeCalled
   }
 
   trait SelfEntity extends TransactionAlg[IO, TID, BID, Q, R] {

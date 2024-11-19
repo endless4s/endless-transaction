@@ -1,6 +1,7 @@
 package endless.transaction
 
 import endless.transaction.Branch.Vote
+import endless.transaction.Transaction.AbortReason
 
 /** A branch defines behavior for the various phases of the 2PC protocol for a certain transaction
   * type. The branch is responsible for preparing, committing and aborting the transaction. The
@@ -73,20 +74,22 @@ trait Branch[F[_], TID, Q, R] {
     *   aborted, however.
     * @param id
     *   transaction id
+    * @param reason
+    *   the reason for the abort
     */
-  def abort(id: TID): F[Unit]
+  def abort(id: TID, reason: AbortReason[R]): F[Unit]
 }
 
 object Branch {
   def apply[F[_], TID, BID, Q, R](
       prepareF: (TID, Q) => F[Vote[R]],
       commitF: TID => F[Unit],
-      abortF: TID => F[Unit]
+      abortF: (TID, AbortReason[R]) => F[Unit]
   ): Branch[F, TID, Q, R] =
     new Branch[F, TID, Q, R] {
       def prepare(id: TID, query: Q): F[Vote[R]] = prepareF(id, query)
       def commit(id: TID): F[Unit] = commitF(id)
-      def abort(id: TID): F[Unit] = abortF(id)
+      def abort(id: TID, reason: AbortReason[R]): F[Unit] = abortF(id, reason)
     }
 
   /** The vote of a branch in the 2PC protocol.
