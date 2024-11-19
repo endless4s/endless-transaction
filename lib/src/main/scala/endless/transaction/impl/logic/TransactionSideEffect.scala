@@ -128,7 +128,7 @@ private[transaction] final class TransactionSideEffect[
         state: Aborting[TID, BID, Q, R]
     )(branchID: BID, branch: Branch[F, TID, Q, R]) = {
       branch
-        .abort(state.id)
+        .abort(state.id, state.reason)
         .flatMap(_ =>
           self
             .branchAborted(branchID)
