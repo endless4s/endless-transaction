@@ -74,7 +74,7 @@ object Dependencies {
   lazy val `log4cats-slf4j` = Seq("org.typelevel" %% "log4cats-slf4j" % log4catsVersion)
   lazy val `log4cats-testing` = Seq("org.typelevel" %% "log4cats-testing" % log4catsVersion)
 
-  lazy val munit = "org.scalameta" %% "munit" % "1.0.2"
+  lazy val munit = "org.scalameta" %% "munit" % "1.0.4"
   lazy val `munit-scalacheck` = "org.scalameta" %% "munit-scalacheck" % "1.0.0"
 
   lazy val scalatest = Seq("org.scalatest" %% "scalatest" % "3.2.19") // for multi-jvm tests
