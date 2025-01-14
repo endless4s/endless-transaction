@@ -53,8 +53,9 @@ final class ShardedAccounts[F[_]: Temporal: Logger](
 }
 
 object ShardedAccounts {
-  def transfersCoordinator[F[_]: Temporal: Logger](sharding: Sharding[F, AccountID, Account])(
-      implicit
+  def transfersCoordinator[F[_]: Temporal: Logger](
+      sharding: Sharding[F, AccountID, Account]
+  )(implicit
       transferParameters: TransferParameters,
       transactor: Transactor[F]
   ): Resource[F, Coordinator[F, TransferID, AccountID, Transfer, TransferFailure]] = {
