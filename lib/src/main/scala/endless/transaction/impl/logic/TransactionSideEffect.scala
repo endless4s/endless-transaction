@@ -183,7 +183,9 @@ private[transaction] object TransactionSideEffect {
       timeout: Option[FiniteDuration],
       branchForID: BID => Branch[F, TID, Q, R],
       alg: TransactionAlg[F, TID, BID, Q, R]
-  )(implicit retryParameters: RetryParameters): F[SideEffect[
+  )(implicit
+      retryParameters: RetryParameters
+  ): F[SideEffect[
     F,
     TransactionState[TID, BID, Q, R],
     ({ type T[G[_]] = TransactionAlg[G, TID, BID, Q, R] })#T
