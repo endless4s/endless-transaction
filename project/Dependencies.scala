@@ -69,7 +69,7 @@ object Dependencies {
   lazy val logbackVersion = "1.5.7"
   lazy val `logback-classic` = Seq("ch.qos.logback" % "logback-classic" % logbackVersion)
 
-  lazy val log4catsVersion = "2.7.0"
+  lazy val log4catsVersion = "2.7.1"
   lazy val `log4cats-core` = Seq("org.typelevel" %% "log4cats-core" % log4catsVersion)
   lazy val `log4cats-slf4j` = Seq("org.typelevel" %% "log4cats-slf4j" % log4catsVersion)
   lazy val `log4cats-testing` = Seq("org.typelevel" %% "log4cats-testing" % log4catsVersion)
