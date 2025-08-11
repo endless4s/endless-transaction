@@ -170,8 +170,7 @@ lazy val documentation = (project in file("documentation"))
     ),
     Compile / paradoxMaterialTheme := {
       val theme = (Compile / paradoxMaterialTheme).value
-      val repository =
-        (ThisBuild / sonatypeProjectHosting).value.get.scmInfo.browseUrl.toURI
+      val repository = uri("https://github.com/endless4s/endless-transaction")
       theme
         .withRepository(repository)
         .withFont("Overpass", "Overpass Mono")
