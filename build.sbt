@@ -43,10 +43,20 @@ inThisBuild(
         url("https://jonaschapuis.com")
       )
     ),
-    sonatypeCredentialHost := "s01.oss.sonatype.org",
-    sonatypeProjectHosting := Some(
-      xerial.sbt.Sonatype.GitHubHosting("endless4s", "endless-transaction", "me@jonaschapuis.com")
+    scmInfo := Some(
+      ScmInfo(
+        url("https://github.com/endless4s/endless-transaction"),
+        "git@github.com:endless4s/endless-transaction.git"
+      )
     ),
+    publishTo := {
+      val centralSnapshots = "https://central.sonatype.com/repository/maven-snapshots/"
+      if (isSnapshot.value) Some("central-snapshots" at centralSnapshots)
+      else localStaging.value
+    },
+    description := "Scala library that provides a functional abstraction for distributed transactions based on cats-effect and the endless library",
+    pomIncludeRepository := { _ => false },
+    publishMavenStyle := true,
     Global / onChangedBuildSource := ReloadOnSourceChanges,
     PB.protocVersion := "3.17.3", // works on Apple Silicon,
     versionPolicyIntention := Compatibility.None,
