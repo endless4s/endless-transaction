@@ -92,16 +92,16 @@ private[transaction] class TransactionEventAdapter[TID, BID, Q, R](implicit
     }
 
   private def encodeBranchID(branch: BID) =
-    proto.model.BranchID(encodeToByteString(branch)(bidCodec))
+    proto.model.BranchID(encodeToByteString(branch)(using bidCodec))
 
   private def decodeBranchID(branch: proto.model.BranchID) =
-    decodeFromByteString(branch.value)(bidCodec)
+    decodeFromByteString(branch.value)(using bidCodec)
 
   private def encodeTransactionID(id: TID) =
-    proto.model.TransactionID(encodeToByteString(id)(tidCodec))
+    proto.model.TransactionID(encodeToByteString(id)(using tidCodec))
 
   private def decodeTransactionID(id: proto.model.TransactionID) =
-    decodeFromByteString(id.value)(tidCodec)
+    decodeFromByteString(id.value)(using tidCodec)
 
   private def encodeToByteString[A](a: A)(implicit encoder: Encoder[A]): ByteString =
     ByteString.copyFrom(encoder.encode(a))
