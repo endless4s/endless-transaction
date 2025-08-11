@@ -34,6 +34,8 @@ val commonSettings = Seq(
 inThisBuild(
   List(
     organization := "io.github.endless4s",
+    organizationName := "endless4s",
+    organizationHomepage := Some(url("https://endless4s.github.io")),
     homepage := Some(url("https://github.com/endless4s/endless-transaction")),
     licenses := List("MIT License" -> url("http://opensource.org/licenses/mit-license.php")),
     developers := List(
