@@ -2,8 +2,8 @@ import Dependencies.*
 import sbt.project
 import sbtversionpolicy.Compatibility
 
-val scala213 = "2.13.16"
-val scala3 = "3.7.2"
+val scala213 = "2.13.18"
+val scala3 = "3.9.0"
 
 val commonSettings = Seq(
   wartremoverExcluded += sourceManaged.value,
@@ -19,14 +19,19 @@ val commonSettings = Seq(
   crossScalaVersions := Seq(scala213, scala3),
   libraryDependencies ++= (CrossVersion.partialVersion(scalaVersion.value) match {
     case Some((2, _)) =>
-      Seq(compilerPlugin("org.typelevel" % "kind-projector" % "0.13.3" cross CrossVersion.full))
+      Seq(compilerPlugin("org.typelevel" % "kind-projector" % "0.13.4" cross CrossVersion.full))
     case _ => Nil
   }),
-  Compile / scalacOptions ++= Seq("-Xfatal-warnings", "-unchecked", "-deprecation"),
+  Compile / scalacOptions ++= Seq("-Werror", "-unchecked", "-deprecation"),
   Compile / scalacOptions ++= (CrossVersion.partialVersion(scalaVersion.value) match {
     case Some((3, _)) => Seq("-Xkind-projector:underscores")
     case Some((2, _)) =>
-      Seq("-Xsource:3", "-P:kind-projector:underscore-placeholders", "-Xlint:unused")
+      Seq(
+        "-Xsource:3",
+        "-Xsource-features:eta-expand-always",
+        "-P:kind-projector:underscore-placeholders",
+        "-Xlint:unused"
+      )
     case _ => Nil
   })
 )
@@ -62,7 +67,7 @@ inThisBuild(
     publishMavenStyle := true,
     Global / onChangedBuildSource := ReloadOnSourceChanges,
     PB.protocVersion := "3.17.3", // works on Apple Silicon,
-    versionPolicyIntention := Compatibility.BinaryCompatible,
+    versionPolicyIntention := Compatibility.None,
     versionScheme := Some("early-semver"),
     versionPolicyIgnoredInternalDependencyVersions := Some(
       "^\\d+\\.\\d+\\.\\d+\\+\\d+".r
