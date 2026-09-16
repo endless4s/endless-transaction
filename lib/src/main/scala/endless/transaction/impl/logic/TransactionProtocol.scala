@@ -61,7 +61,7 @@ private[transaction] class TransactionProtocol[TID, BID, Q, R](implicit
         handleCommand[F, BranchesReply, Unknown.type \/ Set[BID]](
           _.branches,
           {
-            case Left(Unknown) => BranchesReply(BranchesReply.Reply.Unknown(UnknownReply()))
+            case Left(Unknown)   => BranchesReply(BranchesReply.Reply.Unknown(UnknownReply()))
             case Right(branches) =>
               BranchesReply(
                 BranchesReply.Reply.Branches(
@@ -134,7 +134,7 @@ private[transaction] class TransactionProtocol[TID, BID, Q, R](implicit
           _.branchVoted(
             decodeBranchID(branchID),
             vote.vote match {
-              case model.Vote.Vote.Commit(_) => Branch.Vote.Commit
+              case model.Vote.Vote.Commit(_)                     => Branch.Vote.Commit
               case model.Vote.Vote.Abort(model.Abort(reason, _)) =>
                 Branch.Vote.Abort(decodeFromByteString(reason))
               case _ => throw new UnexpectedCommandException
@@ -191,7 +191,7 @@ private[transaction] class TransactionProtocol[TID, BID, Q, R](implicit
         tid,
         TransactionCommand.of(Command.GetQuery(GetQueryCommand())),
         {
-          case QueryReply(QueryReply.Reply.Unknown(_), _) => Unknown.asLeft
+          case QueryReply(QueryReply.Reply.Unknown(_), _)   => Unknown.asLeft
           case QueryReply(QueryReply.Reply.Query(query), _) =>
             decodeFromByteString[Q](query).asRight
           case QueryReply(QueryReply.Reply.Empty, _) =>
@@ -275,7 +275,7 @@ private[transaction] class TransactionProtocol[TID, BID, Q, R](implicit
             BranchVotedCommand(
               encodeBranchID(branch),
               model.Vote(vote match {
-                case Branch.Vote.Commit => model.Vote.Vote.Commit(model.Commit())
+                case Branch.Vote.Commit        => model.Vote.Vote.Commit(model.Commit())
                 case Branch.Vote.Abort(reason) =>
                   model.Vote.Vote.Abort(model.Abort(encodeToByteString(reason)))
               })

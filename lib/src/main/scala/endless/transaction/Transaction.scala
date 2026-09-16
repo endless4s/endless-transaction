@@ -184,7 +184,7 @@ object Transaction {
 
   private def release[F[_]: Temporal: Logger, BID, Q, R](transaction: Transaction[F, BID, Q, R]) =
     (transaction.status >>= {
-      case Right(_: Transaction.Status.Final[R] @unchecked) => ().pure
+      case Right(_: Transaction.Status.Final[R] @unchecked)   => ().pure
       case Right(_: Transaction.Status.Pending[R] @unchecked) =>
         EitherT(transaction.abort()).foldF(
           {

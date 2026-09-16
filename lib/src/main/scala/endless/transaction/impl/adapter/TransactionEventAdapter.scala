@@ -67,7 +67,7 @@ private[transaction] class TransactionEventAdapter[TID, BID, Q, R](implicit
         TransactionEvent.BranchVoted(
           decodeBranchID(branch),
           vote.vote match {
-            case proto.model.Vote.Vote.Empty => throw new IllegalArgumentException("Empty vote")
+            case proto.model.Vote.Vote.Empty     => throw new IllegalArgumentException("Empty vote")
             case proto.model.Vote.Vote.Commit(_) =>
               endless.transaction.Branch.Vote.Commit
             case proto.model.Vote.Vote.Abort(abort) =>

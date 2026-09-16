@@ -11,9 +11,9 @@ import java.util.UUID
 class AccountEventAdapter {
   def toJournal(event: AccountEvent): proto.AccountEvent =
     event match {
-      case Opened            => proto.AccountOpened()
-      case Deposited(amount) => proto.Deposited(amount.value)
-      case Withdrawn(amount) => proto.Withdrawn(amount.value)
+      case Opened                               => proto.AccountOpened()
+      case Deposited(amount)                    => proto.Deposited(amount.value)
+      case Withdrawn(amount)                    => proto.Withdrawn(amount.value)
       case OutgoingTransferPrepared(id, amount) =>
         proto.OutgoingTransferPrepared(model.TransferID(id.value.show), amount.value)
       case IncomingTransferPrepared(id, amount) =>

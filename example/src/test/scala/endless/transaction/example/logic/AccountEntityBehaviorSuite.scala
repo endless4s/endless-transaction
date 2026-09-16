@@ -299,7 +299,7 @@ class AccountEntityBehaviorSuite
       amount <- posAmountGen.suchThat(_.value > state.balance.value)
     } yield (state, amount)) { case (state, amount) =>
       behavior.withdraw(amount).run(Some(state)).map {
-        case Right((_, Left(InsufficientFunds(_)))) => ()
+        case Right((_, Left(InsufficientFunds(_))))    => ()
         case Right((_, Left(PendingOutgoingTransfer))) =>
           fail("account should not have pending transfer")
         case Right((_, Left(Unknown))) => fail("account should exist")
