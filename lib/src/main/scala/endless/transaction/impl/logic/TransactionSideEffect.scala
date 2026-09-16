@@ -147,8 +147,8 @@ private[transaction] final class TransactionSideEffect[
 
     lazy val passivationEffect = ifKnown(state =>
       state.status match {
-        case _: Status.Pending[R] => disablePassivation
-        case _: Status.Final[R]   => enablePassivation()
+        case _: Status.Pending[R] @unchecked => disablePassivation
+        case _: Status.Final[R] @unchecked   => enablePassivation()
       }
     )
 
