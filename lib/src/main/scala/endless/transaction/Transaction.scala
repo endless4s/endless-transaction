@@ -175,17 +175,17 @@ object Transaction {
       for {
         status <- transaction.status.map(_.toOption)
         result <- status match {
-          case None | Some(_: Status.Pending[R]) =>
+          case None | Some(_: Status.Pending[R] @unchecked) =>
             Temporal[F].sleep(frequency) >> transaction.pollForFinalStatus(frequency)
-          case Some(finalStatus: Status.Final[R]) => finalStatus.pure
+          case Some(finalStatus: Status.Final[R] @unchecked) => finalStatus.pure
         }
       } yield result
   }
 
   private def release[F[_]: Temporal: Logger, BID, Q, R](transaction: Transaction[F, BID, Q, R]) =
     (transaction.status >>= {
-      case Right(_: Transaction.Status.Final[R]) => ().pure
-      case Right(_: Transaction.Status.Pending[R]) =>
+      case Right(_: Transaction.Status.Final[R] @unchecked) => ().pure
+      case Right(_: Transaction.Status.Pending[R] @unchecked) =>
         EitherT(transaction.abort()).foldF(
           {
             case Unknown => Logger[F].warn(show"Abort failed: transaction not yet created")
