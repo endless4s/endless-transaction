@@ -34,7 +34,7 @@ class AccountProtocol extends ProtobufCommandProtocol[AccountID, Account] {
 
   def server[F[_]]: Decoder[IncomingCommand[F, Account]] =
     ProtobufDecoder[AccountCommand].map(_.command match {
-      case Command.Empty => throw new UnexpectedCommandException
+      case Command.Empty   => throw new UnexpectedCommandException
       case Command.Open(_) =>
         handleCommand[F, OpenReply, AlreadyExists.type \/ Unit](
           _.open,
