@@ -100,7 +100,7 @@ class AccountEventApplierSuite extends munit.ScalaCheckSuite with Generators {
           state.copy(
             balance = NonNegAmount(expectedBalance),
             pendingTransfers = pendingTransfers match {
-              case PendingTransfers.SingleOutgoing(_) => None
+              case PendingTransfers.SingleOutgoing(_)             => None
               case PendingTransfers.AtLeastOneIncoming(transfers) =>
                 NonEmptyList
                   .fromList(transfers.filterNot(_.id === pendingTransfer.id))

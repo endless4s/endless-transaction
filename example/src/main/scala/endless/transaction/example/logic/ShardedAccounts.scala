@@ -32,14 +32,14 @@ final class ShardedAccounts[F[_]: Temporal: Logger](
       .asResource
       .use(_.pollForFinalStatus())
       .flatMap {
-        case Status.Committed => ().asRight[TransferFailure].pure
+        case Status.Committed       => ().asRight[TransferFailure].pure
         case Status.Aborted(reason) =>
           reason match {
             case AbortReason.Timeout =>
               EitherT.leftT(TransferFailure.Timeout: TransferFailure).value
             case AbortReason.Branches(reasons)    => EitherT.leftT(reasons.head).value
             case AbortReason.Client(Some(reason)) => EitherT.leftT(reason).value
-            case AbortReason.Client(None) =>
+            case AbortReason.Client(None)         =>
               new Exception("Transaction aborted by client without justification")
                 .raiseError[F, TransferFailure \/ Unit]
           }

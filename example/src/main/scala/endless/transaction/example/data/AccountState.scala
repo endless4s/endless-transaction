@@ -30,7 +30,7 @@ final case class AccountState(
       require(getPendingTransfer(id).nonEmpty, "Transfer is unknown")
       copy(
         pendingTransfers = pendingTransfers match {
-          case Some(PendingTransfers.SingleOutgoing(_)) => None
+          case Some(PendingTransfers.SingleOutgoing(_))             => None
           case Some(PendingTransfers.AtLeastOneIncoming(transfers)) =>
             NonEmptyList
               .fromList(transfers.filterNot(_.id === id))
@@ -48,7 +48,7 @@ final case class AccountState(
       require(getPendingTransfer(id).nonEmpty, "Transfer is unknown")
       copy(
         pendingTransfers = pendingTransfers match {
-          case Some(PendingTransfers.SingleOutgoing(_)) => None
+          case Some(PendingTransfers.SingleOutgoing(_))             => None
           case Some(PendingTransfers.AtLeastOneIncoming(transfers)) =>
             NonEmptyList
               .fromList(transfers.filterNot(_.id === id))
@@ -56,7 +56,7 @@ final case class AccountState(
           case None => None
         },
         balance = pendingTransfers match {
-          case Some(PendingTransfers.SingleOutgoing(transfer)) => balance - transfer.amount
+          case Some(PendingTransfers.SingleOutgoing(transfer))      => balance - transfer.amount
           case Some(PendingTransfers.AtLeastOneIncoming(transfers)) =>
             transfers.find(_.id === id).map(_.amount).fold(balance)(balance + _)
           case _ => balance
@@ -80,7 +80,7 @@ final case class AccountState(
     if (transferHistory.contains(id)) this
     else
       copy(pendingTransfers = pendingTransfers match {
-        case Some(PendingTransfers.SingleOutgoing(_)) => pendingTransfers
+        case Some(PendingTransfers.SingleOutgoing(_))             => pendingTransfers
         case Some(PendingTransfers.AtLeastOneIncoming(transfers)) =>
           PendingTransfers
             .AtLeastOneIncoming(transfers :+ PendingTransfer.Incoming(id, amount))
