@@ -79,7 +79,7 @@ object Dependencies {
 
   lazy val scalatest = Seq("org.scalatest" %% "scalatest" % "3.2.20") // for multi-jvm tests
 
-  lazy val `munit-cats-effect-3` = "org.typelevel" %% "munit-cats-effect" % "2.2.0"
+  lazy val `munit-cats-effect-3` = "org.typelevel" %% "munit-cats-effect" % "2.2.1"
 
   lazy val catsEffectVersion = "3.7.1"
   lazy val `cats-effect` = "org.typelevel" %% "cats-effect" % catsEffectVersion
