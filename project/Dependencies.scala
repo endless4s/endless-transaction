@@ -88,5 +88,5 @@ object Dependencies {
 
   lazy val `scalacheck-effect-munit` = "org.typelevel" %% "scalacheck-effect-munit" % "2.1.0"
 
-  lazy val `cats-scalacheck` = Seq("io.chrisdavenport" %% "cats-scalacheck" % "0.3.2")
+  lazy val `cats-scalacheck` = Seq("io.chrisdavenport" %% "cats-scalacheck" % "0.4.0")
 }
