@@ -1,4 +1,4 @@
-addSbtPlugin("org.wartremover" % "sbt-wartremover" % "3.6.2")
+addSbtPlugin("org.wartremover" % "sbt-wartremover" % "3.6.3")
 
 addSbtPlugin("org.scoverage" % "sbt-scoverage" % "2.4.4")
 
