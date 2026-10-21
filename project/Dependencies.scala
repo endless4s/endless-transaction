@@ -19,7 +19,7 @@ object Dependencies {
     "org.http4s" %% "http4s-circe" % http4sVersion
   )
 
-  lazy val pekkoVersion = "1.7.0"
+  lazy val pekkoVersion = "1.7.1"
   lazy val `pekko-actor-typed` = "org.apache.pekko" %% "pekko-actor-typed"
   lazy val `pekko-persistence-typed` = "org.apache.pekko" %% "pekko-persistence-typed"
   lazy val `pekko-cluster-typed` = "org.apache.pekko" %% "pekko-cluster-typed"
@@ -79,7 +79,7 @@ object Dependencies {
 
   lazy val scalatest = Seq("org.scalatest" %% "scalatest" % "3.2.20") // for multi-jvm tests
 
-  lazy val `munit-cats-effect-3` = "org.typelevel" %% "munit-cats-effect" % "2.2.0"
+  lazy val `munit-cats-effect-3` = "org.typelevel" %% "munit-cats-effect" % "2.2.1"
 
   lazy val catsEffectVersion = "3.7.1"
   lazy val `cats-effect` = "org.typelevel" %% "cats-effect" % catsEffectVersion
@@ -88,5 +88,5 @@ object Dependencies {
 
   lazy val `scalacheck-effect-munit` = "org.typelevel" %% "scalacheck-effect-munit" % "2.1.0"
 
-  lazy val `cats-scalacheck` = Seq("io.chrisdavenport" %% "cats-scalacheck" % "0.3.2")
+  lazy val `cats-scalacheck` = Seq("io.chrisdavenport" %% "cats-scalacheck" % "0.5.0")
 }
